@@ -1,1147 +1,908 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emsly Gradients — Roblox UI Color Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ═══════════════════════════════════════
+   EMSLY GRADIENTS — CLEAN MONOCHROME UI
+   ═══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#09090b;--bg2:#111113;--bg3:#18181b;--bg4:#1e1e22;
+  --border:#27272a;--border2:#3f3f46;
+  --text:#fafafa;--text2:#a1a1aa;--text3:#71717a;--text4:#52525b;
+  --white:#ffffff;--black:#000000;
+  --accent:#e4e4e7;
+  --r:8px;--r2:12px;--r3:16px;
+  --tr:all .2s ease;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;line-height:1.5}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
+::selection{background:rgba(255,255,255,.15)}
 
-// ─── STYLE PRESETS ───────────────────────────────────────────
-const STYLE_PRESETS = [
-  { id:"cartoon",  label:"Cartoon",  emoji:"🎨", colors:["#ff6eb4","#ffdd00","#00ccff","#00ee77","#ff4444","#ffffff"] },
-  { id:"dark",     label:"Dark",     emoji:"🌑", colors:["#0a0a0a","#1a1a1a","#333333","#555555","#888888","#bbbbbb"] },
-  { id:"anime",    label:"Anime",    emoji:"⛩️", colors:["#ff6b9d","#c44dff","#4d79ff","#00d4ff","#ff9500","#ffe066"] },
-  { id:"neon",     label:"Neon",     emoji:"⚡", colors:["#00ff88","#00d4ff","#ff2d78","#8800ff","#ffee00","#ff6600"] },
-  { id:"roblox",   label:"Roblox",   emoji:"🎮", colors:["#cc0000","#0055ff","#ffcc00","#00aa44","#6600cc","#ff6600"] },
-  { id:"pastel",   label:"Pastel",   emoji:"🌸", colors:["#ffb3e6","#b3d9ff","#b3ffcc","#ffe4b3","#e4b3ff","#ffd6b3"] },
-  { id:"fire",     label:"Fire",     emoji:"🔥", colors:["#1a0000","#cc0000","#ff4400","#ff8800","#ffdd00","#fff0aa"] },
-  { id:"ocean",    label:"Ocean",    emoji:"🌊", colors:["#000a1a","#001144","#0044aa","#0088ff","#00ccaa","#aaeeff"] },
-  { id:"sunset",   label:"Sunset",   emoji:"🌇", colors:["#0a0011","#330044","#880044","#ff2266","#ff6600","#ffcc44"] },
-  { id:"mono",     label:"Mono",     emoji:"◻️", colors:["#000000","#111111","#333333","#666666","#aaaaaa","#ffffff"] },
+/* ═══ HEADER ═══ */
+.header{padding:28px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;background:rgba(9,9,11,.85);backdrop-filter:blur(20px)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,#fff 0%,#999 100%);display:flex;
+  align-items:center;justify-content:center;font-size:14px;color:#000;font-weight:900}
+.logo h1{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
+.logo h1 span{color:var(--text3);font-weight:500}
+.header-nav{display:flex;gap:2px;background:var(--bg3);border-radius:var(--r2);padding:3px}
+.header-nav button{padding:8px 16px;border:none;background:transparent;color:var(--text3);
+  font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;border-radius:var(--r);
+  transition:var(--tr);white-space:nowrap}
+.header-nav button:hover{color:var(--text2)}
+.header-nav button.on{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+
+/* ═══ LAYOUT ═══ */
+.app{display:flex;height:calc(100vh - 73px);overflow:hidden}
+.main-area{flex:1;overflow-y:auto;padding:24px}
+.sec{display:none}.sec.on{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ FIGMA PANEL (Right) ═══ */
+.figma-panel{width:320px;background:var(--bg2);border-left:1px solid var(--border);
+  overflow-y:auto;transition:all .3s ease;flex-shrink:0}
+.figma-panel.closed{width:0;border:none;overflow:hidden}
+.fp-inner{padding:20px;min-width:320px}
+.fp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.fp-head h3{font-size:.85rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.fp-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;
+  padding:4px;transition:var(--tr)}
+.fp-close:hover{color:var(--text)}
+.fp-preview{width:100%;aspect-ratio:1;border-radius:var(--r2);margin-bottom:20px;
+  position:relative;overflow:hidden}
+.fp-preview::after{content:'';position:absolute;top:8px;left:14px;width:30%;height:20%;
+  background:rgba(255,255,255,.18);border-radius:50%;transform:rotate(-20deg);filter:blur(2px)}
+.fp-name{font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.fp-collection{font-size:.75rem;color:var(--text3);margin-bottom:20px}
+.fp-section{margin-bottom:16px}
+.fp-section-title{font-size:.7rem;font-weight:700;color:var(--text4);text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:8px}
+.fp-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);
+  border-radius:var(--r);margin-bottom:4px;cursor:pointer;transition:var(--tr);border:1px solid transparent}
+.fp-row:hover{border-color:var(--border2);background:var(--bg4)}
+.fp-row:active{transform:scale(.98)}
+.fp-row .label{font-size:.7rem;color:var(--text3);min-width:50px;font-weight:600}
+.fp-row .value{font-size:.8rem;font-weight:600;font-family:'SF Mono','Courier New',monospace;flex:1}
+.fp-row .copy-icon{font-size:.7rem;color:var(--text4);opacity:0;transition:var(--tr)}
+.fp-row:hover .copy-icon{opacity:1}
+.fp-harmonies{display:flex;gap:6px;flex-wrap:wrap}
+.fp-harm-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;transition:var(--tr);
+  border:2px solid transparent}
+.fp-harm-dot:hover{border-color:var(--white);transform:scale(1.15)}
+.fp-empty{text-align:center;padding:60px 20px;color:var(--text4)}
+.fp-empty i{font-size:2rem;margin-bottom:12px;display:block}
+.fp-empty p{font-size:.82rem}
+
+/* ═══ SECTION HEADS ═══ */
+.sec-title{font-size:1.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.sec-desc{font-size:.85rem;color:var(--text3);margin-bottom:24px}
+
+/* ═══ COLLECTIONS ═══ */
+.coll-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.coll-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);
+  overflow:hidden;cursor:pointer;transition:var(--tr)}
+.coll-card:hover{border-color:var(--border2);transform:translateY(-2px);
+  box-shadow:0 8px 25px rgba(0,0,0,.3)}
+.coll-banner{height:80px;position:relative}
+.coll-banner .coll-dots{position:absolute;bottom:8px;left:10px;display:flex;gap:4px}
+.coll-banner .coll-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3)}
+.coll-body{padding:12px 14px}
+.coll-body h3{font-size:.88rem;font-weight:700;margin-bottom:2px}
+.coll-body p{font-size:.72rem;color:var(--text4)}
+.coll-body .coll-count{font-size:.65rem;color:var(--text3);margin-top:4px;font-weight:600}
+
+/* BACK BTN */
+.back-row{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.back-btn{background:var(--bg3);border:1px solid var(--border);padding:7px 14px;
+  border-radius:var(--r);color:var(--text2);font-family:inherit;font-size:.8rem;
+  font-weight:600;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:6px}
+.back-btn:hover{border-color:var(--border2);color:var(--text)}
+.coll-detail-title{font-size:1rem;font-weight:700}
+
+/* COLOR SWATCH GRID */
+.swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.swatch{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;
+  transition:var(--tr);position:relative}
+.swatch:hover{border-color:var(--border2);transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.swatch.selected{border-color:var(--white);box-shadow:0 0 0 1px var(--white)}
+.swatch-circle{width:48px;height:48px;border-radius:50%;position:relative;
+  box-shadow:0 2px 8px rgba(0,0,0,.3);transition:var(--tr)}
+.swatch:hover .swatch-circle{transform:scale(1.08)}
+.swatch-circle::after{content:'';position:absolute;top:5px;left:9px;width:14px;height:8px;
+  background:rgba(255,255,255,.22);border-radius:50%;transform:rotate(-25deg)}
+.swatch-name{font-size:.62rem;font-weight:600;text-align:center;line-height:1.2;color:var(--text2)}
+.swatch-hex{font-size:.58rem;color:var(--text4);font-family:'SF Mono','Courier New',monospace;font-weight:600}
+
+/* ═══ GRADIENTS ═══ */
+.grad-filters{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.grad-filter{padding:6px 14px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:20px;color:var(--text3);font-family:inherit;font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:var(--tr)}
+.grad-filter:hover,.grad-filter.on{border-color:var(--border2);color:var(--text)}
+.grad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.grad-card{border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:var(--tr);
+  border:1px solid var(--border);background:var(--bg2)}
+.grad-card:hover{border-color:var(--border2);transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.grad-swatch{height:90px;position:relative}
+.grad-swatch::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,.06) 50%,transparent 60%);
+  animation:gradShine 5s ease infinite}
+@keyframes gradShine{0%,100%{transform:translateX(-200%)}50%{transform:translateX(200%)}}
+.grad-info{padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.grad-name{font-size:.78rem;font-weight:700}
+.grad-copy-btn{background:none;border:none;color:var(--text4);cursor:pointer;font-size:.75rem;
+  transition:var(--tr);padding:4px}
+.grad-copy-btn:hover{color:var(--text)}
+
+/* ═══ GENERATOR ═══ */
+.gen-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:800px){.gen-layout{grid-template-columns:1fr}}
+.gen-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
+.gen-card h3{font-size:.85rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.gen-card h3 i{color:var(--text3)}
+.gen-field{margin-bottom:14px}
+.gen-field label{display:block;font-size:.72rem;font-weight:600;color:var(--text3);margin-bottom:6px;
+  text-transform:uppercase;letter-spacing:.05em}
+.gen-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  color:var(--text);padding:9px 12px;font-family:inherit;font-size:.82rem;font-weight:600;
+  cursor:pointer;outline:none;transition:var(--tr);appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center}
+.gen-select:focus{border-color:var(--border2)}
+.gen-slider{width:100%;-webkit-appearance:none;height:4px;border-radius:10px;background:var(--bg4);
+  outline:none;cursor:pointer}
+.gen-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--white);cursor:pointer;box-shadow:0 0 4px rgba(0,0,0,.4);transition:var(--tr)}
+.gen-slider::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.gen-slider-val{font-size:.72rem;color:var(--text3);font-weight:600;margin-top:4px;text-align:right}
+.gen-color-input{display:flex;align-items:center;gap:8px}
+.gen-color-input input[type="color"]{width:40px;height:34px;border:1px solid var(--border);
+  border-radius:var(--r);cursor:pointer;background:transparent;padding:2px}
+.gen-color-input input[type="text"]{flex:1;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:'SF Mono',monospace;
+  font-size:.82rem;font-weight:600;outline:none;transition:var(--tr)}
+.gen-color-input input[type="text"]:focus{border-color:var(--border2)}
+.gen-btn{width:100%;padding:12px;background:var(--white);color:var(--black);border:none;
+  border-radius:var(--r);font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;
+  transition:var(--tr)}
+.gen-btn:hover{opacity:.9;transform:translateY(-1px)}
+.gen-btn:active{transform:scale(.98)}
+.gen-btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.gen-btn-secondary:hover{border-color:var(--border2);opacity:1}
+.gen-result-grad{height:80px;border-radius:var(--r);margin-bottom:12px;cursor:pointer;transition:var(--tr)}
+.gen-result-grad:hover{box-shadow:0 0 20px rgba(255,255,255,.05)}
+.gen-result-colors{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.gen-result-chip{display:flex;align-items:center;gap:6px;background:var(--bg3);padding:6px 10px;
+  border-radius:var(--r);cursor:pointer;transition:var(--tr);border:1px solid var(--border)}
+.gen-result-chip:hover{border-color:var(--border2)}
+.gen-result-dot{width:18px;height:18px;border-radius:50%}
+.gen-result-hex{font-family:'SF Mono',monospace;font-size:.7rem;font-weight:600}
+
+/* BOT MINI */
+.bot-bar{display:flex;align-items:center;gap:10px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:16px}
+.bot-icon{width:28px;height:28px;background:var(--white);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--black);flex-shrink:0}
+.bot-text{font-size:.78rem;color:var(--text2);font-weight:500}
+
+/* ═══ PREVIEW ═══ */
+.prev-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:800px){.prev-layout{grid-template-columns:1fr}}
+.prev-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
+.prev-card h3{font-size:.85rem;font-weight:700;margin-bottom:16px}
+.prev-frame{border-radius:var(--r2);padding:28px;min-height:340px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;transition:var(--tr)}
+.prev-frame .pf-title{font-size:1.3rem;font-weight:800}
+.prev-frame .pf-desc{font-size:.82rem;opacity:.7}
+.prev-frame .pf-btn{padding:10px 28px;border-radius:var(--r);font-weight:700;font-size:.85rem;
+  border:none;cursor:pointer;transition:var(--tr)}
+.prev-frame .pf-btn:hover{transform:scale(1.04)}
+.prev-frame .pf-bar{height:8px;border-radius:10px;width:70%}
+.prev-frame .pf-avatar{width:52px;height:52px;border-radius:50%}
+.prev-frame .pf-badge{padding:5px 14px;border-radius:20px;font-size:.7rem;font-weight:700}
+.prev-field{margin-bottom:12px}
+.prev-field label{display:block;font-size:.7rem;font-weight:600;color:var(--text3);margin-bottom:5px}
+.prev-field-row{display:flex;gap:8px;align-items:center}
+.prev-field-row input[type="color"]{width:36px;height:30px;border:1px solid var(--border);
+  border-radius:6px;cursor:pointer;background:transparent;padding:2px}
+.prev-field-row input[type="text"]{flex:1;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;padding:6px 10px;color:var(--text);font-family:'SF Mono',monospace;
+  font-size:.78rem;font-weight:600;outline:none}
+.prev-field-row input[type="text"]:focus{border-color:var(--border2)}
+
+/* ═══ TOAST ═══ */
+.toast-box{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;
+  display:flex;flex-direction:column;align-items:center;gap:6px}
+.toast{background:var(--white);color:var(--black);padding:10px 20px;border-radius:var(--r);
+  font-size:.8rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);
+  animation:toastIn .25s ease,toastOut .25s ease 2s forwards;display:flex;align-items:center;gap:8px}
+@keyframes toastIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:900px){
+  .figma-panel{position:fixed;right:0;top:73px;bottom:0;z-index:200;
+    box-shadow:-10px 0 30px rgba(0,0,0,.5)}
+  .figma-panel.closed{width:0}
+}
+@media(max-width:600px){
+  .header{flex-direction:column;gap:12px}
+  .header-nav{overflow-x:auto;width:100%}
+  .swatch-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px}
+  .swatch-circle{width:38px;height:38px}
+  .swatch{padding:8px 4px 8px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">E</div>
+    <h1>Emsly <span>Gradients</span></h1>
+  </div>
+  <nav class="header-nav">
+    <button class="on" data-s="collections"><i class="fas fa-gem"></i> Koleksiyonlar</button>
+    <button data-s="gradients"><i class="fas fa-fill-drip"></i> Gradientler</button>
+    <button data-s="generator"><i class="fas fa-wand-magic-sparkles"></i> Üretici</button>
+    <button data-s="preview"><i class="fas fa-eye"></i> Önizleme</button>
+  </nav>
+</header>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- COLLECTIONS -->
+    <section id="collections" class="sec on">
+      <div id="collHome">
+        <h2 class="sec-title">Renk Koleksiyonları</h2>
+        <p class="sec-desc">Özenle seçilmiş, uyumlu renk paletleri. Bir koleksiyona tıkla.</p>
+        <div class="coll-grid" id="collGrid"></div>
+      </div>
+      <div id="collDetail" style="display:none">
+        <div class="back-row">
+          <button class="back-btn" id="collBack"><i class="fas fa-arrow-left"></i> Geri</button>
+          <span class="coll-detail-title" id="collDetailTitle"></span>
+        </div>
+        <div class="swatch-grid" id="collSwatches"></div>
+      </div>
+    </section>
+
+    <!-- GRADIENTS -->
+    <section id="gradients" class="sec">
+      <h2 class="sec-title">Hazır Gradientler</h2>
+      <p class="sec-desc">Tıkla → Roblox Lua kodunu kopyala. Hemen kullan.</p>
+      <div class="grad-filters" id="gradFilters"></div>
+      <div class="grad-grid" id="gradGrid"></div>
+    </section>
+
+    <!-- GENERATOR -->
+    <section id="generator" class="sec">
+      <h2 class="sec-title">Akıllı Renk Üretici</h2>
+      <p class="sec-desc">Temel rengi seç, harmoni tipini belirle, üret.</p>
+      <div class="bot-bar">
+        <div class="bot-icon"><i class="fas fa-robot"></i></div>
+        <div class="bot-text" id="botText">Bir renk seç veya ruh hali belirle, sana uyumlu renkler üreteyim 🎨</div>
+      </div>
+      <div class="gen-layout">
+        <div class="gen-card">
+          <h3><i class="fas fa-sliders-h"></i> Ayarlar</h3>
+          <div class="gen-field">
+            <label>Temel Renk</label>
+            <div class="gen-color-input">
+              <input type="color" id="genBaseColor" value="#8b5cf6">
+              <input type="text" id="genBaseHex" value="#8b5cf6">
+            </div>
+          </div>
+          <div class="gen-field">
+            <label>Ruh Hali / Tema</label>
+            <select class="gen-select" id="genMood">
+              <option value="custom">🎯 Manuel (Seçilen renkten)</option>
+              <option value="energetic">🔥 Enerjik</option>
+              <option value="calm">🌊 Sakin</option>
+              <option value="dark">🌑 Karanlık</option>
+              <option value="cute">🌸 Kawaii</option>
+              <option value="cyber">💜 Cyber</option>
+              <option value="nature">🌿 Doğa</option>
+              <option value="sunset">🌅 Gün Batımı</option>
+              <option value="ocean">🌊 Okyanus</option>
+              <option value="galaxy">🌌 Galaksi</option>
+              <option value="candy">🍬 Şeker</option>
+              <option value="royal">👑 Royal</option>
+              <option value="toxic">☢️ Toxic</option>
+              <option value="winter">❄️ Kış</option>
+            </select>
+          </div>
+          <div class="gen-field">
+            <label>Harmoni Tipi</label>
+            <select class="gen-select" id="genHarmony">
+              <option value="analogous">Analogous (Yakın tonlar)</option>
+              <option value="complementary">Complementary (Zıt renkler)</option>
+              <option value="triadic">Triadic (Üçlü)</option>
+              <option value="split">Split Complementary</option>
+              <option value="tetradic">Tetradic (Dörtlü)</option>
+              <option value="monochromatic">Monochromatic (Tek ton)</option>
+            </select>
+          </div>
+          <div class="gen-field">
+            <label>Renk Sayısı: <span id="genCountVal">5</span></label>
+            <input type="range" class="gen-slider" id="genCount" min="3" max="12" value="5">
+          </div>
+          <div class="gen-field">
+            <label>Doygunluk: <span id="genSatVal">70</span>%</label>
+            <input type="range" class="gen-slider" id="genSat" min="10" max="100" value="70">
+          </div>
+          <div class="gen-field">
+            <label>Parlaklık: <span id="genLightVal">50</span>%</label>
+            <input type="range" class="gen-slider" id="genLight" min="10" max="90" value="50">
+          </div>
+          <button class="gen-btn" id="genBtn"><i class="fas fa-wand-magic-sparkles"></i> Üret</button>
+          <div style="height:8px"></div>
+          <button class="gen-btn gen-btn-secondary" id="genAutoBtn"><i class="fas fa-play"></i> Otomatik (3sn)</button>
+        </div>
+        <div class="gen-card">
+          <h3><i class="fas fa-palette"></i> Sonuç</h3>
+          <div class="gen-result-grad" id="genGrad" style="background:linear-gradient(90deg,#8b5cf6,#06b6d4)"></div>
+          <div class="gen-result-colors" id="genColors"></div>
+          <div id="genCodes"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PREVIEW -->
+    <section id="preview" class="sec">
+      <h2 class="sec-title">Canlı UI Önizleme</h2>
+      <p class="sec-desc">Renkleri ayarla, Roblox UI'ının nasıl görüneceğini gör.</p>
+      <div class="prev-layout">
+        <div class="prev-card">
+          <h3>Renk Ayarları</h3>
+          <div class="prev-field"><label>Arka Plan 1</label><div class="prev-field-row"><input type="color" id="pv1" value="#1a1a2e"><input type="text" id="pv1t" value="#1a1a2e"></div></div>
+          <div class="prev-field"><label>Arka Plan 2</label><div class="prev-field-row"><input type="color" id="pv2" value="#16213e"><input type="text" id="pv2t" value="#16213e"></div></div>
+          <div class="prev-field"><label>Yazı Rengi</label><div class="prev-field-row"><input type="color" id="pv3" value="#ffffff"><input type="text" id="pv3t" value="#ffffff"></div></div>
+          <div class="prev-field"><label>Buton</label><div class="prev-field-row"><input type="color" id="pv4" value="#e94560"><input type="text" id="pv4t" value="#e94560"></div></div>
+          <div class="prev-field"><label>Buton Yazı</label><div class="prev-field-row"><input type="color" id="pv5" value="#ffffff"><input type="text" id="pv5t" value="#ffffff"></div></div>
+          <div class="prev-field"><label>Accent / Bar</label><div class="prev-field-row"><input type="color" id="pv6" value="#0f3460"><input type="text" id="pv6t" value="#0f3460"></div></div>
+          <div class="prev-field"><label>Açı: <span id="pvAngV">135</span>°</label><input type="range" class="gen-slider" id="pvAng" min="0" max="360" value="135"></div>
+          <button class="gen-btn" id="pvRandom" style="margin-top:8px"><i class="fas fa-shuffle"></i> Rastgele</button>
+        </div>
+        <div class="prev-card">
+          <h3>Önizleme</h3>
+          <div class="prev-frame" id="pvFrame">
+            <div class="pf-avatar" id="pvAvatar"></div>
+            <div class="pf-title" id="pvTitle">Oyun Mağazası</div>
+            <div class="pf-desc" id="pvDesc">En iyi itemleri keşfet</div>
+            <div class="pf-btn" id="pvBtn">Satın Al — 100 R$</div>
+            <div class="pf-bar" id="pvBar"></div>
+            <div class="pf-badge" id="pvBadge">⭐ Premium</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FIGMA PANEL -->
+  <div class="figma-panel closed" id="figmaPanel">
+    <div class="fp-inner">
+      <div class="fp-head">
+        <h3>Renk Detay</h3>
+        <button class="fp-close" id="fpClose"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div id="fpContent">
+        <div class="fp-empty"><i class="fas fa-droplet"></i><p>Bir renge tıkla<br>detayları burada görüntüle</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+// ═══════════════════════════════════════
+// EMSLY GRADIENTS — ALL LOGIC
+// ═══════════════════════════════════════
+
+// === HELPERS ===
+const hexToRgb=h=>{h=h.replace('#','');return{r:parseInt(h.substr(0,2),16),g:parseInt(h.substr(2,2),16),b:parseInt(h.substr(4,2),16)}};
+const rgbToHex=(r,g,b)=>'#'+[r,g,b].map(x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0')).join('');
+const hslToRgb=(h,s,l)=>{h/=360;s/=100;l/=100;let r,g,b;if(!s){r=g=b=l}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,f=(p,q,t)=>{t<0&&(t+=1);t>1&&(t-=1);return t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p};r=f(p,q,h+1/3);g=f(p,q,h);b=f(p,q,h-1/3)}return{r:Math.round(r*255),g:Math.round(g*255),b:Math.round(b*255)}};
+const rgbToHsl=(r,g,b)=>{r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;if(mx===mn)h=s=0;else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;case b:h=((r-g)/d+4)/6;break}}return{h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)}};
+const randHex=()=>'#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0');
+const toast=m=>{const c=document.getElementById('toastBox'),t=document.createElement('div');t.className='toast';t.innerHTML=`<i class="fas fa-check"></i> ${m}`;c.appendChild(t);setTimeout(()=>t.remove(),2500)};
+const cp=t=>{navigator.clipboard.writeText(t).then(()=>toast('Kopyalandı'))};
+
+// === NAV ===
+document.querySelectorAll('.header-nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.header-nav button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');document.getElementById(b.dataset.s).classList.add('on');
+}));
+
+// === FIGMA PANEL ===
+const fpanel=document.getElementById('figmaPanel');
+document.getElementById('fpClose').addEventListener('click',()=>fpanel.classList.add('closed'));
+
+function openFigma(name,hex,collection){
+  fpanel.classList.remove('closed');
+  const rgb=hexToRgb(hex);
+  const hsl=rgbToHsl(rgb.r,rgb.g,rgb.b);
+  const r3=`Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  const r3n=`Color3.new(${(rgb.r/255).toFixed(3)}, ${(rgb.g/255).toFixed(3)}, ${(rgb.b/255).toFixed(3)})`;
+
+  // Generate harmonies
+  const harms=[];
+  for(let i=1;i<=5;i++){
+    const nh=(hsl.h+i*30)%360;
+    const c=hslToRgb(nh,hsl.s,hsl.l);
+    harms.push(rgbToHex(c.r,c.g,c.b));
+  }
+
+  document.getElementById('fpContent').innerHTML=`
+    <div class="fp-preview" style="background:${hex}"></div>
+    <div class="fp-name">${name}</div>
+    <div class="fp-collection">${collection||'Renk'}</div>
+    <div class="fp-section">
+      <div class="fp-section-title">Değerler (tıkla → kopyala)</div>
+      <div class="fp-row" onclick="cp('${hex}')"><span class="label">HEX</span><span class="value">${hex.toUpperCase()}</span><i class="fas fa-copy copy-icon"></i></div>
+      <div class="fp-row" onclick="cp('rgb(${rgb.r}, ${rgb.g}, ${rgb.b})')"><span class="label">RGB</span><span class="value">${rgb.r}, ${rgb.g}, ${rgb.b}</span><i class="fas fa-copy copy-icon"></i></div>
+      <div class="fp-row" onclick="cp('hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)')"><span class="label">HSL</span><span class="value">${hsl.h}°, ${hsl.s}%, ${hsl.l}%</span><i class="fas fa-copy copy-icon"></i></div>
+      <div class="fp-row" onclick="cp('${r3}')"><span class="label">Roblox</span><span class="value" style="font-size:.68rem">${r3}</span><i class="fas fa-copy copy-icon"></i></div>
+      <div class="fp-row" onclick="cp('${r3n}')"><span class="label">Color3</span><span class="value" style="font-size:.68rem">${r3n}</span><i class="fas fa-copy copy-icon"></i></div>
+    </div>
+    <div class="fp-section">
+      <div class="fp-section-title">Uyumlu Tonlar</div>
+      <div class="fp-harmonies">${harms.map(h=>`<div class="fp-harm-dot" style="background:${h}" onclick="openFigma('${h}','${h}','Harmoni')" title="${h}"></div>`).join('')}</div>
+    </div>`;
+}
+
+// === COLOR DATABASE ===
+const COLLECTIONS=[
+{id:'gold',name:'Gold',icon:'👑',desc:'Altın ve amber tonları',
+  gradient:'linear-gradient(135deg,#B8860B,#FFD700,#F5E6A0)',
+  colors:[
+    {n:'Dark Gold',h:'#8B6914'},{n:'Antique Gold',h:'#C9A55A'},{n:'Classic Gold',h:'#D4AF37'},
+    {n:'Golden',h:'#FFD700'},{n:'Honey',h:'#EB9605'},{n:'Amber',h:'#FFBF00'},
+    {n:'Goldenrod',h:'#DAA520'},{n:'Pale Gold',h:'#EFC88B'},{n:'Champagne',h:'#F7E7CE'},
+    {n:'Old Gold',h:'#CFB53B'},{n:'Harvest',h:'#DA9100'},{n:'Brass',h:'#B5A642'},
+    {n:'Satin Gold',h:'#CBA135'},{n:'Warm Gold',h:'#F0C75E'},{n:'Light Gold',h:'#FAFAD2'},
+  ]},
+{id:'silver',name:'Silver',icon:'🪙',desc:'Gümüş ve platinum tonları',
+  gradient:'linear-gradient(135deg,#71797E,#C0C0C0,#E5E4E2)',
+  colors:[
+    {n:'Steel',h:'#71797E'},{n:'Dark Silver',h:'#808080'},{n:'Gray',h:'#8B8B8B'},
+    {n:'Silver',h:'#A9A9A9'},{n:'Quicksilver',h:'#A6A6A6'},{n:'Pure Silver',h:'#C0C0C0'},
+    {n:'Pearl Gray',h:'#C4C3C0'},{n:'Ash',h:'#B2BEB5'},{n:'Gainsboro',h:'#DCDCDC'},
+    {n:'Chrome',h:'#DBE4EB'},{n:'Platinum',h:'#E5E4E2'},{n:'Mercury',h:'#9C9C9C'},
+    {n:'Pewter',h:'#8BA8B7'},{n:'Titanium',h:'#878681'},{n:'Aluminum',h:'#D2D4D6'},
+  ]},
+{id:'diamond',name:'Diamond',icon:'💎',desc:'Buz mavisi ve kristal tonları',
+  gradient:'linear-gradient(135deg,#81D4FA,#E0FFFF,#F0F8FF)',
+  colors:[
+    {n:'Sapphire Ice',h:'#81D4FA'},{n:'Sky Crystal',h:'#87CEEB'},{n:'Glacier',h:'#B3E5FC'},
+    {n:'Arctic',h:'#D4F1F9'},{n:'Frost',h:'#E1F5FE'},{n:'Ice',h:'#E0FFFF'},
+    {n:'Opal',h:'#A8C8E0'},{n:'Diamond White',h:'#F0F8FF'},{n:'Crystal',h:'#E8EAF6'},
+    {n:'Prism',h:'#B2EBF2'},{n:'Brilliant',h:'#E3F2FD'},{n:'Celeste',h:'#B2FFFF'},
+    {n:'Aqua Ice',h:'#C5E8F0'},{n:'Snow',h:'#F5F5F5'},{n:'Clear',h:'#F0FFFF'},
+  ]},
+{id:'ruby',name:'Ruby',icon:'❤️‍🔥',desc:'Koyu kırmızı ve yakut tonları',
+  gradient:'linear-gradient(135deg,#4A0404,#9B111E,#DC143C)',
+  colors:[
+    {n:'Dark Cherry',h:'#4A0404'},{n:'Blood',h:'#660000'},{n:'Maroon',h:'#800000'},
+    {n:'Burgundy',h:'#800020'},{n:'Wine',h:'#722F37'},{n:'Merlot',h:'#6E0B14'},
+    {n:'Garnet',h:'#733635'},{n:'Carmine',h:'#960018'},{n:'Ruby',h:'#9B111E'},
+    {n:'Crimson',h:'#DC143C'},{n:'Scarlet',h:'#FF2400'},{n:'Rose Red',h:'#C21E56'},
+    {n:'Cherry',h:'#DE3163'},{n:'Cranberry',h:'#9C0027'},{n:'Vermilion',h:'#E34234'},
+  ]},
+{id:'sapphire',name:'Sapphire',icon:'💙',desc:'Derin mavi ve safir tonları',
+  gradient:'linear-gradient(135deg,#000080,#0047AB,#4169E1)',
+  colors:[
+    {n:'Navy',h:'#000080'},{n:'Midnight',h:'#191970'},{n:'Marine',h:'#042E60'},
+    {n:'Deep Sapphire',h:'#082567'},{n:'Cobalt',h:'#0047AB'},{n:'Sapphire',h:'#0F52BA'},
+    {n:'Royal Blue',h:'#4169E1'},{n:'Azure',h:'#0077BE'},{n:'Denim',h:'#1560BD'},
+    {n:'Steel Blue',h:'#4682B4'},{n:'Cornflower',h:'#6495ED'},{n:'Ocean',h:'#0059B3'},
+    {n:'Electric',h:'#0066FF'},{n:'Indigo',h:'#3F00FF'},{n:'Blue Bell',h:'#A2A2D0'},
+  ]},
+{id:'emerald',name:'Emerald',icon:'💚',desc:'Zümrüt yeşili ve jade tonları',
+  gradient:'linear-gradient(135deg,#1B4332,#2D6A4F,#52B788)',
+  colors:[
+    {n:'Forest',h:'#1B4332'},{n:'Hunter',h:'#355E3B'},{n:'Pine',h:'#01796F'},
+    {n:'Deep Emerald',h:'#046307'},{n:'Emerald',h:'#50C878'},{n:'Jade',h:'#00A86B'},
+    {n:'Viridian',h:'#40826D'},{n:'Sea Green',h:'#2E8B57'},{n:'Shamrock',h:'#009E60'},
+    {n:'Malachite',h:'#0BDA51'},{n:'Spring',h:'#00FF7F'},{n:'Mint',h:'#98FB98'},
+    {n:'Pistachio',h:'#93C572'},{n:'Fern',h:'#4F7942'},{n:'Moss',h:'#8A9A5B'},
+  ]},
+{id:'amethyst',name:'Amethyst',icon:'💜',desc:'Mor, menekşe ve lavanta tonları',
+  gradient:'linear-gradient(135deg,#36013F,#7851A9,#E0B0FF)',
+  colors:[
+    {n:'Deep Purple',h:'#36013F'},{n:'Byzantium',h:'#702963'},{n:'Eggplant',h:'#614051'},
+    {n:'Plum',h:'#8E4585'},{n:'Grape',h:'#6F2DA8'},{n:'Royal Purple',h:'#7851A9'},
+    {n:'Amethyst',h:'#9966CC'},{n:'Iris',h:'#5A4FCF'},{n:'Violet',h:'#7F00FF'},
+    {n:'Orchid',h:'#DA70D6'},{n:'Lavender',h:'#B57EDC'},{n:'Lilac',h:'#C8A2C8'},
+    {n:'Mauve',h:'#E0B0FF'},{n:'Wisteria',h:'#C9A0DC'},{n:'Thistle',h:'#D8BFD8'},
+  ]},
+{id:'rose',name:'Rose Quartz',icon:'🌸',desc:'Pembe, gül ve blush tonları',
+  gradient:'linear-gradient(135deg,#C21E56,#FF69B4,#FFBCD9)',
+  colors:[
+    {n:'Deep Rose',h:'#C21E56'},{n:'Cerise',h:'#DE3163'},{n:'Hot Pink',h:'#FF69B4'},
+    {n:'Rose',h:'#FF007F'},{n:'Punch',h:'#EC5578'},{n:'Flamingo',h:'#FC8EAC'},
+    {n:'Blush',h:'#DE5D83'},{n:'Carnation',h:'#FFA6C9'},{n:'Coral',h:'#FF7F50'},
+    {n:'Salmon',h:'#FA8072'},{n:'Cotton Candy',h:'#FFBCD9'},{n:'Rose Gold',h:'#B76E79'},
+    {n:'Dusty Rose',h:'#DCAE96'},{n:'Peony',h:'#DE6FA1'},{n:'Petal',h:'#F8C8DC'},
+  ]},
+{id:'obsidian',name:'Obsidian',icon:'🖤',desc:'Karanlık UI ve siyah tonları',
+  gradient:'linear-gradient(135deg,#000000,#1a1a1a,#333333)',
+  colors:[
+    {n:'Black',h:'#000000'},{n:'Void',h:'#080808'},{n:'Carbon',h:'#0D0D0D'},
+    {n:'Night',h:'#111111'},{n:'Onyx',h:'#181818'},{n:'Shadow',h:'#1E1E1E'},
+    {n:'Raven',h:'#242424'},{n:'Dark',h:'#2A2A2A'},{n:'Charcoal',h:'#333333'},
+    {n:'Gunmetal',h:'#3A3A3A'},{n:'Slate',h:'#444444'},{n:'Storm',h:'#4F4F4F'},
+    {n:'Iron',h:'#555555'},{n:'Graphite',h:'#5C5C5C'},{n:'Pewter',h:'#666666'},
+  ]},
+{id:'neon',name:'Neon',icon:'⚡',desc:'Parlak neon renkler',
+  gradient:'linear-gradient(135deg,#FF073A,#39FF14,#4D4DFF)',
+  colors:[
+    {n:'Neon Red',h:'#FF073A'},{n:'Neon Rose',h:'#FF006E'},{n:'Neon Pink',h:'#FF6EC7'},
+    {n:'Neon Magenta',h:'#FF00FF'},{n:'Neon Purple',h:'#B026FF'},{n:'Neon Blue',h:'#4D4DFF'},
+    {n:'Neon Cyan',h:'#00FFEF'},{n:'Neon Mint',h:'#00FFA5'},{n:'Neon Green',h:'#39FF14'},
+    {n:'Neon Lime',h:'#BFFF00'},{n:'Neon Yellow',h:'#CCFF00'},{n:'Neon Orange',h:'#FF6700'},
+    {n:'Neon Coral',h:'#FF4040'},{n:'Neon Electric',h:'#7DF9FF'},{n:'Neon Violet',h:'#7F00FF'},
+  ]},
+{id:'sunset',name:'Sunset',icon:'🌅',desc:'Gün batımı ve sıcak tonlar',
+  gradient:'linear-gradient(135deg,#E34234,#FF8C00,#FFD700)',
+  colors:[
+    {n:'Crimson Dusk',h:'#C94C4C'},{n:'Fire',h:'#E34234'},{n:'Tangerine',h:'#FF6347'},
+    {n:'Sunset Red',h:'#E85D04'},{n:'Orange Glow',h:'#FF8C00'},{n:'Mango',h:'#FF9966'},
+    {n:'Amber Light',h:'#F0A500'},{n:'Golden Hour',h:'#FFAB40'},{n:'Peach',h:'#FFCBA4'},
+    {n:'Warm Sand',h:'#EDC9AF'},{n:'Coral Sky',h:'#FF6F61'},{n:'Rose Evening',h:'#F7797D'},
+    {n:'Blush Horizon',h:'#FFB199'},{n:'Sunrise',h:'#FFD700'},{n:'Cream',h:'#FFF3E0'},
+  ]},
+{id:'ocean',name:'Ocean',icon:'🌊',desc:'Deniz, okyanus ve su tonları',
+  gradient:'linear-gradient(135deg,#003545,#0077B6,#90E0EF)',
+  colors:[
+    {n:'Abyss',h:'#003545'},{n:'Deep Sea',h:'#005F73'},{n:'Marine',h:'#023E8A'},
+    {n:'Pacific',h:'#006994'},{n:'Tidal',h:'#0A9396'},{n:'Atlantic',h:'#0077B6'},
+    {n:'Caribbean',h:'#00B4D8'},{n:'Reef',h:'#48CAE4'},{n:'Wave',h:'#94D2BD'},
+    {n:'Lagoon',h:'#90E0EF'},{n:'Seafoam',h:'#ADE8F4'},{n:'Tropical',h:'#CAF0F8'},
+    {n:'Teal',h:'#008080'},{n:'Aqua',h:'#00CED1'},{n:'Turquoise',h:'#40E0D0'},
+  ]},
+{id:'pastel',name:'Pastel',icon:'🧁',desc:'Yumuşak pastel tonlar',
+  gradient:'linear-gradient(135deg,#FFD1DC,#B39EB5,#AEC6CF)',
+  colors:[
+    {n:'Pastel Pink',h:'#FFD1DC'},{n:'Pastel Rose',h:'#FFB7CE'},{n:'Pastel Coral',h:'#F88379'},
+    {n:'Pastel Peach',h:'#FFDAB9'},{n:'Pastel Orange',h:'#FFB347'},{n:'Pastel Yellow',h:'#FDFD96'},
+    {n:'Pastel Lemon',h:'#FFF9C4'},{n:'Pastel Mint',h:'#AAF0D1'},{n:'Pastel Green',h:'#77DD77'},
+    {n:'Pastel Aqua',h:'#C4FAF8'},{n:'Pastel Sky',h:'#BFEFFF'},{n:'Pastel Blue',h:'#AEC6CF'},
+    {n:'Pastel Lavender',h:'#E6E6FA'},{n:'Pastel Lilac',h:'#C3B1E1'},{n:'Pastel Purple',h:'#B39EB5'},
+  ]},
+{id:'cyber',name:'Cyber',icon:'🔮',desc:'Synthwave ve cyberpunk tonları',
+  gradient:'linear-gradient(135deg,#0D0221,#7B2FFF,#FF006E)',
+  colors:[
+    {n:'Void Black',h:'#0D0221'},{n:'Dark Cyber',h:'#150050'},{n:'Deep Indigo',h:'#3F0071'},
+    {n:'Cyber Purple',h:'#7B2FFF'},{n:'Electric Purple',h:'#A855F7'},{n:'Glitch',h:'#B967FF'},
+    {n:'Synth Blue',h:'#0066FF'},{n:'Retro Blue',h:'#01CDFE'},{n:'Cyber Cyan',h:'#00D4FF'},
+    {n:'Matrix Green',h:'#00FF41'},{n:'Neon Teal',h:'#00FF87'},{n:'Vaporwave',h:'#FF71CE'},
+    {n:'Cyber Pink',h:'#FF006E'},{n:'Hot Magenta',h:'#E040FB'},{n:'Laser Red',h:'#FF0040'},
+  ]},
 ];
 
-// ─── GRADIENT SUGGESTION GENERATOR ───────────────────────────
-function mix(hex1, hex2, t) {
-  const a = parseInt(hex1.replace("#",""),16), b = parseInt(hex2.replace("#",""),16);
-  const r = Math.round(((a>>16)&255)*( 1-t) + ((b>>16)&255)*t);
-  const g = Math.round(((a>>8)&255)*(1-t)  + ((b>>8)&255)*t);
-  const bl= Math.round((a&255)*(1-t)        + (b&255)*t);
-  return `#${r.toString(16).padStart(2,"0")}${g.toString(16).padStart(2,"0")}${bl.toString(16).padStart(2,"0")}`;
-}
-function dark(c,a){ return mix(c,"#000000",a); }
-function light(c,a){ return mix(c,"#ffffff",a); }
+// === RENDER COLLECTIONS ===
+const collGrid=document.getElementById('collGrid');
+COLLECTIONS.forEach(col=>{
+  const card=document.createElement('div');card.className='coll-card';
+  const dots=col.colors.slice(0,5).map(c=>`<div class="coll-dot" style="background:${c.h}"></div>`).join('');
+  card.innerHTML=`<div class="coll-banner" style="background:${col.gradient}"><div class="coll-dots">${dots}</div></div>
+    <div class="coll-body"><h3>${col.icon} ${col.name}</h3><p>${col.desc}</p><div class="coll-count">${col.colors.length} renk</div></div>`;
+  card.addEventListener('click',()=>openCollection(col));
+  collGrid.appendChild(card);
+});
 
-function makeSuggestions(picks) {
-  if(!picks.length) return [];
-  const [c0, c1=light(c0,.4), c2=c1, c3=dark(c0,.3)] = picks;
-  return [
-    { role:"btn-fill",    label:"Button Fill",     css:`linear-gradient(135deg,${c0},${c1})`,                 colors:[c0,c1] },
-    { role:"btn-fill",    label:"Button Fill Alt",  css:`linear-gradient(135deg,${dark(c0,.15)},${dark(c1,.15)})`, colors:[dark(c0,.15),dark(c1,.15)] },
-    { role:"btn-fill",    label:"Button Hover",     css:`linear-gradient(135deg,${light(c0,.15)},${light(c1,.15)})`, colors:[light(c0,.15),light(c1,.15)] },
-    { role:"btn-stroke",  label:"Button Stroke",    css:`linear-gradient(135deg,${c0},${c1})`,                 colors:[c0,c1] },
-    { role:"btn-stroke",  label:"Stroke Alt",       css:`linear-gradient(135deg,${c1},${c2})`,                 colors:[c1,c2] },
-    { role:"frame-fill",  label:"Frame Fill",       css:`linear-gradient(160deg,${dark(c0,.75)},${dark(c1,.65)})`, colors:[dark(c0,.75),dark(c1,.65)] },
-    { role:"frame-fill",  label:"Frame Fill 2",     css:`linear-gradient(180deg,${dark(c0,.88)},${dark(c0,.7)})`,  colors:[dark(c0,.88),dark(c0,.7)] },
-    { role:"frame-fill",  label:"Frame Light",      css:`linear-gradient(135deg,${light(c0,.7)},${light(c1,.6)})`, colors:[light(c0,.7),light(c1,.6)] },
-    { role:"frame-stroke",label:"Frame Stroke",     css:`linear-gradient(135deg,${c0},${c1})`,                 colors:[c0,c1] },
-    { role:"frame-stroke",label:"Frame Stroke 2",   css:`linear-gradient(135deg,${light(c0,.2)},${light(c1,.3)})`, colors:[light(c0,.2),light(c1,.3)] },
-    { role:"bg",          label:"Background",       css:`radial-gradient(circle at 30% 20%,${dark(c0,.6)},${dark(c1,.85)})`, colors:[dark(c0,.6),dark(c1,.85)] },
-    { role:"bg",          label:"BG Linear",        css:`linear-gradient(180deg,${dark(c0,.85)},#000000)`,      colors:[dark(c0,.85),"#000000"] },
-    picks.length>=3 ? { role:"btn-fill", label:"3-Stop Button", css:`linear-gradient(135deg,${c0},${c1},${c2})`, colors:[c0,c1,c2] } : null,
-    picks.length>=3 ? { role:"frame-fill", label:"3-Stop Frame", css:`linear-gradient(160deg,${dark(c0,.6)},${dark(c1,.5)},${dark(c2,.5)})`, colors:[dark(c0,.6),dark(c1,.5),dark(c2,.5)] } : null,
-    { role:"text",        label:"Text Gradient",    css:`linear-gradient(135deg,${c0},${c1})`,                 colors:[c0,c1] },
-    { role:"text",        label:"Icon Fill",        css:`radial-gradient(circle,${light(c0,.2)},${c0})`,        colors:[light(c0,.2),c0] },
-  ].filter(Boolean);
+function openCollection(col){
+  document.getElementById('collHome').style.display='none';
+  const det=document.getElementById('collDetail');det.style.display='block';
+  document.getElementById('collDetailTitle').textContent=`${col.icon} ${col.name} — ${col.colors.length} Renk`;
+  const sw=document.getElementById('collSwatches');sw.innerHTML='';
+  col.colors.forEach(c=>{
+    const s=document.createElement('div');s.className='swatch';
+    s.innerHTML=`<div class="swatch-circle" style="background:${c.h}"></div><div class="swatch-name">${c.n}</div><div class="swatch-hex">${c.h}</div>`;
+    s.addEventListener('click',()=>{
+      document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('selected'));
+      s.classList.add('selected');
+      openFigma(c.n,c.h,col.name);
+    });
+    sw.appendChild(s);
+  });
 }
 
-const ROLE_INFO = {
-  "btn-fill":    { label:"Button Fill",    col:"#00ff88" },
-  "btn-stroke":  { label:"Btn Stroke",     col:"#00d4ff" },
-  "frame-fill":  { label:"Frame Fill",     col:"#a855f7" },
-  "frame-stroke":{ label:"Frame Stroke",   col:"#ff2d78" },
-  "bg":          { label:"Background",     col:"#ff9500" },
-  "text":        { label:"Text / Icon",    col:"#ffe066" },
-};
+document.getElementById('collBack').addEventListener('click',()=>{
+  document.getElementById('collHome').style.display='block';
+  document.getElementById('collDetail').style.display='none';
+});
 
-// ─── GRADIENT EDITOR CORE ────────────────────────────────────
-function buildGradientCSS(stops, type, angle, cx, cy) {
-  const sorted = [...stops].sort((a,b)=>a.pos-b.pos);
-  const stops_str = sorted.map(s=>`${s.color} ${s.pos}%`).join(", ");
-  if(type==="radial") return `radial-gradient(circle at ${cx}% ${cy}%, ${stops_str})`;
-  if(type==="conic")  return `conic-gradient(from ${angle}deg, ${stops_str})`;
-  return `linear-gradient(${angle}deg, ${stops_str})`;
-}
-
-let stopIdCounter = 10;
-
-export default function App() {
-  // ── TABS
-  const [tab, setTab] = useState("editor"); // editor | picker | presets
-
-  // ── EDITOR STATE
-  const [stops, setStops] = useState([
-    { id:1, color:"#00ff88", pos:0 },
-    { id:2, color:"#00d4ff", pos:50 },
-    { id:3, color:"#ff2d78", pos:100 },
-  ]);
-  const [selectedStop, setSelectedStop] = useState(1);
-  const [gradType, setGradType] = useState("linear");
-  const [angle, setAngle] = useState(135);
-  const [cx, setCx] = useState(50);
-  const [cy, setCy] = useState(50);
-  const [copied, setCopied] = useState(false);
-  const trackRef = useRef(null);
-  const draggingRef = useRef(null);
-
-  // ── PICKER STATE
-  const [pickedColors, setPickedColors] = useState([]);
-  const [activePreset, setActivePreset] = useState(null);
-  const [customHex, setCustomHex] = useState("#ff6eb4");
-  const [roleFilter, setRoleFilter] = useState("all");
-
-  // ── PRESETS TAB
-  const PRESET_PAIRS = [
-    {name:"Neon Circuit",  fill:["#001a0a","#003322"], stroke:["#00ff88","#00ffcc"]},
-    {name:"Cyber Blue",    fill:["#000a1a","#002255"], stroke:["#00d4ff","#88eeff"]},
-    {name:"Hot Signal",    fill:["#1a0008","#550022"], stroke:["#ff2d78","#ff88bb"]},
-    {name:"UV Edge",       fill:["#0a001a","#1a0033"], stroke:["#8800ff","#dd88ff"]},
-    {name:"Roblox Classic",fill:["#cc0000","#ff3333"], stroke:["#ffffff","#ffeeee"]},
-    {name:"Studio UI",     fill:["#1a1a2a","#2a2a4a"], stroke:["#6666ff","#aaaaff"]},
-    {name:"VIP Gold",      fill:["#1a1100","#332200"], stroke:["#ffdd00","#ffaa44"]},
-    {name:"Anime Sakura",  fill:["#1a0011","#330022"], stroke:["#ff6b9d","#ffccdd"]},
-    {name:"Anime Mana",    fill:["#0a001a","#1a0033"], stroke:["#c44dff","#4d79ff"]},
-    {name:"Fire Edge",     fill:["#1a0000","#330000"], stroke:["#ff4400","#ffaa00"]},
-    {name:"Ocean Depth",   fill:["#000022","#001144"], stroke:["#0088ff","#44ccff"]},
-    {name:"Pastel Dream",  fill:["#fff0f8","#f0f0ff"], stroke:["#ff99cc","#9999ff"]},
-  ];
-
-  // ─── COPY ────────────────────────────────────────────────────
-  const [toast, setToast] = useState(null);
-  const toastTimer = useRef(null);
-  const copy = useCallback((text, msg="Copied!") => {
-    navigator.clipboard.writeText(text).catch(()=>{});
-    clearTimeout(toastTimer.current);
-    setToast(msg);
-    toastTimer.current = setTimeout(()=>setToast(null), 1800);
-  }, []);
-
-  // ─── EDITOR: gradient CSS ─────────────────────────────────
-  const gradCSS = buildGradientCSS(stops, gradType, angle, cx, cy);
-
-  // ─── EDITOR: dragging stops ──────────────────────────────
-  const startDrag = useCallback((e, id) => {
-    e.preventDefault();
-    setSelectedStop(id);
-    draggingRef.current = id;
-    const move = (ev) => {
-      const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-      const rect = trackRef.current?.getBoundingClientRect();
-      if(!rect) return;
-      const raw = ((clientX - rect.left) / rect.width) * 100;
-      const pos = Math.max(0, Math.min(100, Math.round(raw)));
-      setStops(prev => prev.map(s => s.id===draggingRef.current ? {...s, pos} : s));
-    };
-    const up = () => { draggingRef.current = null; window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); window.removeEventListener("touchmove", move); window.removeEventListener("touchend", up); };
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
-    window.addEventListener("touchmove", move, {passive:false});
-    window.addEventListener("touchend", up);
-  }, []);
-
-  const addStop = useCallback((e) => {
-    if(draggingRef.current) return;
-    const rect = trackRef.current?.getBoundingClientRect();
-    if(!rect) return;
-    const pos = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left)/rect.width)*100)));
-    const sorted = [...stops].sort((a,b)=>a.pos-b.pos);
-    let color = "#ffffff";
-    for(let i=0; i<sorted.length-1; i++){
-      if(pos>=sorted[i].pos && pos<=sorted[i+1].pos){
-        const t = (pos-sorted[i].pos)/(sorted[i+1].pos-sorted[i].pos);
-        color = mix(sorted[i].color, sorted[i+1].color, t);
-        break;
-      }
-    }
-    const newId = ++stopIdCounter;
-    setStops(prev=>[...prev, {id:newId, color, pos}]);
-    setSelectedStop(newId);
-  }, [stops]);
-
-  const removeStop = useCallback((id) => {
-    if(stops.length<=2) return;
-    setStops(prev=>prev.filter(s=>s.id!==id));
-    setSelectedStop(stops.find(s=>s.id!==id)?.id || stops[0].id);
-  }, [stops]);
-
-  const updateColor = (id, color) => setStops(prev=>prev.map(s=>s.id===id?{...s,color}:s));
-  const updatePos   = (id, pos)   => setStops(prev=>prev.map(s=>s.id===id?{...s,pos:Number(pos)}:s));
-
-  const selStop = stops.find(s=>s.id===selectedStop);
-
-  // ─── PICKER suggestions ───────────────────────────────────
-  const suggestions = makeSuggestions(pickedColors);
-  const filteredSugg = roleFilter==="all" ? suggestions : suggestions.filter(s=>s.role===roleFilter);
-
-  // ─── STYLES ───────────────────────────────────────────────
-  const C = { bg:"#080808", bg2:"#0f0f0f", bg3:"#141414", bg4:"#1c1c1c", br:"rgba(255,255,255,0.07)", br2:"rgba(255,255,255,0.13)", tx:"#f0f0f0", tx2:"#777", tx3:"#3a3a3a", neon:"#00ff88" };
-
-  const pill = (active, onClick, children, col="#00ff88") => (
-    <button onClick={onClick} style={{
-      padding:"5px 14px", fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:".65rem",
-      letterSpacing:2, textTransform:"uppercase", cursor:"pointer", borderRadius:2, border:`1px solid ${active?(col):"rgba(255,255,255,0.1)"}`,
-      background:active?`${col}22`:"transparent", color:active?col:C.tx2, transition:"all .18s"
-    }}>{children}</button>
-  );
-
-  return (
-    <div style={{fontFamily:"'Space Grotesk',sans-serif", background:C.bg, color:C.tx, minHeight:"100vh", display:"flex", flexDirection:"column"}}>
-      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-
-      {/* ══ NAV ══ */}
-      <nav style={{position:"sticky",top:0,zIndex:100,padding:"11px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(8,8,8,0.96)",borderBottom:`1px solid ${C.br}`,backdropFilter:"blur(24px)"}}>
-        <div style={{fontWeight:700,fontSize:".9rem",letterSpacing:3,textTransform:"uppercase"}}>
-          ▲ <span style={{color:C.neon}}>Gradient</span>Studio<sup style={{fontSize:".38rem",color:C.neon,verticalAlign:"super"}}>®</sup>
-        </div>
-        <div style={{display:"flex",gap:3}}>
-          {[["editor","⬛ Editor"],["picker","🎨 Style Picker"],["presets","✦ Presets"]].map(([id,lbl])=>(
-            <button key={id} onClick={()=>setTab(id)} style={{
-              padding:"6px 14px", fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:".62rem", letterSpacing:2, textTransform:"uppercase",
-              cursor:"pointer", borderRadius:2, border:`1px solid ${tab===id?"rgba(0,255,136,0.4)":C.br}`,
-              background:tab===id?"rgba(0,255,136,0.08)":"transparent", color:tab===id?C.neon:C.tx2, transition:"all .18s"
-            }}>{lbl}</button>
-          ))}
-        </div>
-        <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3}}>by M1SLY</div>
-      </nav>
-
-      {/* ══ EDITOR TAB ══ */}
-      {tab==="editor" && (
-        <div style={{flex:1,display:"grid",gridTemplateColumns:"1fr 280px",gap:0}}>
-
-          {/* LEFT: Preview + Track */}
-          <div style={{padding:28,display:"flex",flexDirection:"column",gap:16,borderRight:`1px solid ${C.br}`}}>
-
-            {/* Big preview */}
-            <div style={{height:220,borderRadius:3,background:gradCSS,border:`1px solid ${C.br}`,position:"relative",cursor:gradType==="radial"?"crosshair":"default",flexShrink:0}}
-              onClick={gradType==="radial" ? (e)=>{const r=e.currentTarget.getBoundingClientRect();setCx(Math.round(((e.clientX-r.left)/r.width)*100));setCy(Math.round(((e.clientY-r.top)/r.height)*100));} : undefined}>
-              {gradType==="radial" && <div style={{position:"absolute",left:`${cx}%`,top:`${cy}%`,transform:"translate(-50%,-50%)",width:12,height:12,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.7)",pointerEvents:"none"}}/>}
-              <div style={{position:"absolute",bottom:8,right:8,fontSize:".58rem",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"rgba(255,255,255,0.4)"}}>
-                {gradType==="radial"?"click to move center":gradType==="linear"?`${angle}°`:"conic"}
-              </div>
-            </div>
-
-            {/* Type + Angle */}
-            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              {["linear","radial","conic"].map(t=>(
-                <button key={t} onClick={()=>setGradType(t)} style={{
-                  padding:"7px 16px",fontFamily:"'Space Grotesk',sans-serif",fontWeight:700,fontSize:".65rem",letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2,
-                  border:`1px solid ${gradType===t?"rgba(0,255,136,0.5)":C.br}`,background:gradType===t?"rgba(0,255,136,0.1)":"transparent",
-                  color:gradType===t?C.neon:C.tx2,transition:"all .18s"
-                }}>{t}</button>
-              ))}
-              {(gradType==="linear"||gradType==="conic") && (
-                <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
-                  <span style={{fontSize:".6rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:C.tx3,flexShrink:0}}>Angle</span>
-                  <input type="range" min={0} max={360} value={angle} onChange={e=>setAngle(Number(e.target.value))}
-                    style={{flex:1,accentColor:C.neon,cursor:"pointer"}}/>
-                  <span style={{fontSize:".75rem",fontWeight:700,color:C.neon,minWidth:36,textAlign:"right",fontFamily:"monospace"}}>{angle}°</span>
-                </div>
-              )}
-            </div>
-
-            {/* Gradient Track */}
-            <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:"20px 16px 28px",borderRadius:2}}>
-              <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:14}}>Color Stops — click track to add · double-click stop to remove</div>
-
-              {/* Track */}
-              <div ref={trackRef} onClick={addStop} style={{height:28,borderRadius:2,background:buildGradientCSS(stops,"linear",90,50,50),position:"relative",cursor:"crosshair",border:`1px solid ${C.br}`,userSelect:"none"}}>
-                {stops.map(s=>(
-                  <div key={s.id}
-                    onMouseDown={e=>startDrag(e,s.id)}
-                    onTouchStart={e=>startDrag(e,s.id)}
-                    onDoubleClick={e=>{e.stopPropagation();removeStop(s.id);}}
-                    onClick={e=>{e.stopPropagation();setSelectedStop(s.id);}}
-                    style={{
-                      position:"absolute",top:"50%",left:`${s.pos}%`,transform:"translate(-50%,-50%)",
-                      width:22,height:22,borderRadius:3,background:s.color,
-                      border:selectedStop===s.id?"3px solid #fff":"2px solid rgba(255,255,255,0.4)",
-                      cursor:"grab",zIndex:2,transition:"border .1s",boxShadow:selectedStop===s.id?`0 0 0 2px ${C.neon}55`:"none",
-                      outline:s.color==="#ffffff"?"1px solid #333":"none"
-                    }}/>
-                ))}
-              </div>
-
-              {/* Stops list */}
-              <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:2}}>
-                {[...stops].sort((a,b)=>a.pos-b.pos).map(s=>(
-                  <div key={s.id} onClick={()=>setSelectedStop(s.id)} style={{
-                    display:"flex",alignItems:"center",gap:10,padding:"6px 10px",
-                    background:selectedStop===s.id?"rgba(0,255,136,0.06)":"transparent",
-                    border:`1px solid ${selectedStop===s.id?"rgba(0,255,136,0.2)":"transparent"}`,borderRadius:2,cursor:"pointer"
-                  }}>
-                    <div style={{width:18,height:18,borderRadius:2,background:s.color,border:"1px solid rgba(255,255,255,0.15)",flexShrink:0}}/>
-                    <span style={{fontSize:".7rem",fontFamily:"monospace",color:C.tx2,flex:1}}>{s.color}</span>
-                    <span style={{fontSize:".65rem",color:C.tx3,fontFamily:"monospace"}}>{s.pos}%</span>
-                    {stops.length>2 && (
-                      <button onClick={e=>{e.stopPropagation();removeStop(s.id);}} style={{
-                        width:16,height:16,borderRadius:2,background:"transparent",border:"none",color:C.tx3,cursor:"pointer",fontSize:".65rem",
-                        display:"flex",alignItems:"center",justifyContent:"center",transition:"color .15s"
-                      }} onMouseEnter={e=>e.currentTarget.style.color="#ff2d78"} onMouseLeave={e=>e.currentTarget.style.color=C.tx3}>✕</button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* CSS Output */}
-            <div style={{background:C.bg2,border:`1px solid ${C.br}`,borderRadius:2,overflow:"hidden"}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",borderBottom:`1px solid ${C.br}`}}>
-                <span style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3}}>CSS Output</span>
-                <button onClick={()=>copy(`background: ${gradCSS};`,"CSS Copied!")} style={{
-                  padding:"5px 14px",background:copied?"rgba(0,255,136,0.1)":C.neon,color:copied?"#00ff88":"#000",border:copied?`1px solid ${C.neon}`:"none",
-                  fontFamily:"'Space Grotesk',sans-serif",fontSize:".6rem",fontWeight:900,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2,transition:"all .2s"
-                }}>⎘ Copy CSS</button>
-              </div>
-              <div style={{padding:14,fontFamily:"monospace",fontSize:".75rem",color:C.neon,lineHeight:1.7,wordBreak:"break-all",userSelect:"all"}}>
-                background: {gradCSS};
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: Stop editor */}
-          <div style={{padding:20,display:"flex",flexDirection:"column",gap:10}}>
-            <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3}}>Selected Stop</div>
-
-            {selStop && (
-              <>
-                {/* Color picker */}
-                <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:14,borderRadius:2}}>
-                  <div style={{height:70,borderRadius:2,background:selStop.color,border:"1px solid rgba(255,255,255,0.1)",marginBottom:12,position:"relative"}}>
-                    <div onClick={()=>copy(selStop.color,`${selStop.color} copied!`)} style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.2)",cursor:"pointer",borderRadius:2,fontSize:".65rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(255,255,255,0.6)",opacity:0,transition:"opacity .15s"}}
-                      onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0}>⎘ {selStop.color}</div>
-                  </div>
-                  <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
-                    <input type="color" value={selStop.color} onChange={e=>updateColor(selStop.id,e.target.value)}
-                      style={{width:44,height:36,border:"none",background:"none",cursor:"pointer",borderRadius:2,flexShrink:0}}/>
-                    <input value={selStop.color} onChange={e=>{if(/^#[0-9a-fA-F]{0,6}$/.test(e.target.value))updateColor(selStop.id,e.target.value);}}
-                      style={{flex:1,background:C.bg3,border:`1px solid ${C.br2}`,color:C.tx,fontFamily:"monospace",fontSize:".8rem",padding:"7px 10px",outline:"none",borderRadius:2}}/>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:".58rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:C.tx3,flexShrink:0}}>Pos</span>
-                    <input type="range" min={0} max={100} value={selStop.pos} onChange={e=>updatePos(selStop.id,e.target.value)}
-                      style={{flex:1,accentColor:C.neon,cursor:"pointer"}}/>
-                    <span style={{fontSize:".72rem",fontFamily:"monospace",color:C.neon,minWidth:32,textAlign:"right"}}>{selStop.pos}%</span>
-                  </div>
-                </div>
-
-                {/* Quick palette */}
-                <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:14,borderRadius:2}}>
-                  <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:10}}>Quick Colors</div>
-                  {[
-                    ["#00ff88","#00d4ff","#ff2d78","#8800ff","#ffee00"],
-                    ["#ff6eb4","#ff6600","#cc0000","#0055ff","#00aa44"],
-                    ["#ffffff","#aaaaaa","#555555","#222222","#000000"],
-                    ["#ffb3e6","#b3d9ff","#b3ffcc","#ffe4b3","#e4b3ff"],
-                  ].map((row,ri)=>(
-                    <div key={ri} style={{display:"flex",gap:5,marginBottom:5}}>
-                      {row.map(c=>(
-                        <div key={c} onClick={()=>updateColor(selStop.id,c)} style={{
-                          width:32,height:24,borderRadius:2,background:c,cursor:"pointer",
-                          border:selStop.color===c?"2px solid #fff":"1px solid rgba(255,255,255,0.1)",
-                          outline:c==="#ffffff"?"1px solid #333":"none",transition:"transform .1s",flexShrink:0
-                        }} onMouseEnter={e=>e.currentTarget.style.transform="scale(1.15)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}/>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* Radial center */}
-            {gradType==="radial" && (
-              <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:14,borderRadius:2}}>
-                <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:10}}>Center Point (click preview)</div>
-                <div style={{display:"flex",gap:8,marginBottom:6}}>
-                  <span style={{fontSize:".62rem",color:C.tx3,width:16}}>X</span>
-                  <input type="range" min={0} max={100} value={cx} onChange={e=>setCx(Number(e.target.value))} style={{flex:1,accentColor:C.neon,cursor:"pointer"}}/>
-                  <span style={{fontSize:".65rem",fontFamily:"monospace",color:C.neon,minWidth:32,textAlign:"right"}}>{cx}%</span>
-                </div>
-                <div style={{display:"flex",gap:8}}>
-                  <span style={{fontSize:".62rem",color:C.tx3,width:16}}>Y</span>
-                  <input type="range" min={0} max={100} value={cy} onChange={e=>setCy(Number(e.target.value))} style={{flex:1,accentColor:C.neon,cursor:"pointer"}}/>
-                  <span style={{fontSize:".65rem",fontFamily:"monospace",color:C.neon,minWidth:32,textAlign:"right"}}>{cy}%</span>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <button onClick={()=>{
-              const newId=++stopIdCounter;
-              const pos=Math.round(Math.random()*80+10);
-              setStops(prev=>[...prev,{id:newId,color:"#ffffff",pos}]);
-              setSelectedStop(newId);
-            }} style={{padding:"9px",background:"transparent",border:`1px solid ${C.br2}`,color:C.tx2,fontFamily:"'Space Grotesk',sans-serif",fontSize:".62rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2}}>+ Add Stop</button>
-
-            <button onClick={()=>{
-              const preset=STYLE_PRESETS[Math.floor(Math.random()*STYLE_PRESETS.length)];
-              const newStops=preset.colors.slice(0,3+Math.floor(Math.random()*2)).map((c,i,arr)=>({id:++stopIdCounter,color:c,pos:Math.round(i/(arr.length-1)*100)}));
-              setStops(newStops);
-              setSelectedStop(newStops[0].id);
-            }} style={{padding:"9px",background:`rgba(0,255,136,0.06)`,border:`1px solid rgba(0,255,136,0.2)`,color:C.neon,fontFamily:"'Space Grotesk',sans-serif",fontSize:".62rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2}}>⚡ Random</button>
-          </div>
-        </div>
-      )}
-
-      {/* ══ PICKER TAB ══ */}
-      {tab==="picker" && (
-        <div style={{flex:1,padding:28}}>
-          <div style={{textAlign:"center",marginBottom:28}}>
-            <h2 style={{fontSize:"clamp(1.4rem,3vw,2rem)",fontWeight:700,letterSpacing:-1,marginBottom:6}}>
-              Pick a Style → Get <span style={{color:C.neon}}>Matching Gradients</span>
-            </h2>
-            <p style={{fontSize:".75rem",color:C.tx2,fontWeight:300}}>Select preset colors or add custom — generates button fill, frame, stroke & background</p>
-          </div>
-
-          <div style={{display:"grid",gridTemplateColumns:"280px 1fr",gap:14,maxWidth:1100,margin:"0 auto"}}>
-
-            {/* LEFT */}
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-
-              {/* Presets */}
-              <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:16,borderRadius:2}}>
-                <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.neon,marginBottom:10}}>Style Presets</div>
-                {STYLE_PRESETS.map(p=>(
-                  <div key={p.id} onClick={()=>{setActivePreset(p.id);setPickedColors(p.colors.slice(0,3));}} style={{
-                    display:"flex",alignItems:"center",gap:10,padding:"7px 10px",borderRadius:2,cursor:"pointer",marginBottom:2,
-                    background:activePreset===p.id?"rgba(0,255,136,0.07)":"transparent",
-                    border:`1px solid ${activePreset===p.id?"rgba(0,255,136,0.25)":"transparent"}`,transition:"all .15s"
-                  }}>
-                    <span style={{fontSize:"1rem"}}>{p.emoji}</span>
-                    <span style={{flex:1,fontSize:".78rem",fontWeight:600,color:activePreset===p.id?C.neon:C.tx}}>{p.label}</span>
-                    <div style={{display:"flex",gap:3}}>
-                      {p.colors.slice(0,5).map((c,i)=>(
-                        <div key={i} style={{width:9,height:9,borderRadius:"50%",background:c,border:c==="#ffffff"||c==="#000000"?"1px solid #444":"none"}}/>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Preset colors */}
-              {activePreset && (
-                <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:16,borderRadius:2}}>
-                  <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:10}}>Pick up to 5</div>
-                  <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-                    {STYLE_PRESETS.find(p=>p.id===activePreset)?.colors.map((c,i)=>(
-                      <div key={i} onClick={()=>{ if(pickedColors.includes(c))setPickedColors(pickedColors.filter(x=>x!==c)); else if(pickedColors.length<5)setPickedColors([...pickedColors,c]); }} style={{cursor:"pointer",textAlign:"center"}}>
-                        <div style={{width:36,height:36,borderRadius:3,background:c,border:pickedColors.includes(c)?"2px solid #00ff88":"2px solid transparent",outline:c==="#ffffff"?"1px solid #333":"none",transition:"all .15s",transform:pickedColors.includes(c)?"scale(1.18)":"scale(1)",marginBottom:3}}/>
-                        <div style={{fontSize:".48rem",color:C.tx3,fontFamily:"monospace"}}>{c}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Custom */}
-              <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:16,borderRadius:2}}>
-                <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:10}}>Custom Color</div>
-                <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                  <input type="color" value={customHex} onChange={e=>setCustomHex(e.target.value)} style={{width:44,height:40,border:"none",background:"none",cursor:"pointer",borderRadius:3}}/>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:".75rem",fontWeight:700,fontFamily:"monospace",marginBottom:5}}>{customHex}</div>
-                    <button onClick={()=>{ if(!pickedColors.includes(customHex)&&pickedColors.length<5)setPickedColors([...pickedColors,customHex]); }} style={{padding:"4px 12px",background:C.neon,color:"#000",border:"none",fontFamily:"'Space Grotesk',sans-serif",fontSize:".6rem",fontWeight:900,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2}}>+ Add</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Selected */}
-              <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:16,borderRadius:2}}>
-                <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:8}}>Selected ({pickedColors.length}/5)</div>
-                {pickedColors.length===0
-                  ? <div style={{fontSize:".72rem",color:C.tx3,textAlign:"center",padding:"8px 0"}}>Pick colors above ↑</div>
-                  : <>
-                    <div style={{height:36,borderRadius:2,background:`linear-gradient(135deg,${pickedColors.join(",")})`,border:`1px solid ${C.br}`,marginBottom:10}}/>
-                    <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                      {pickedColors.map((c,i)=>(
-                        <div key={i} onClick={()=>setPickedColors(pickedColors.filter(x=>x!==c))} title="click to remove" style={{cursor:"pointer",textAlign:"center"}}>
-                          <div style={{width:28,height:28,borderRadius:2,background:c,border:"1px solid rgba(255,255,255,0.1)"}}/>
-                          <div style={{fontSize:".45rem",color:C.tx3,fontFamily:"monospace",marginTop:2}}>{c}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={()=>{setPickedColors([]);setActivePreset(null);}} style={{marginTop:8,padding:"4px 10px",background:"transparent",border:`1px solid ${C.br}`,color:C.tx3,fontFamily:"'Space Grotesk',sans-serif",fontSize:".58rem",fontWeight:700,letterSpacing:1,textTransform:"uppercase",cursor:"pointer",borderRadius:2}}>Clear All</button>
-                  </>
-                }
-              </div>
-            </div>
-
-            {/* RIGHT: Results */}
-            <div>
-              {pickedColors.length===0
-                ? <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100%",flexDirection:"column",gap:10}}>
-                    <div style={{fontSize:"3rem"}}>🎨</div>
-                    <div style={{fontSize:".78rem",color:C.tx3,textAlign:"center",fontWeight:300}}>Select a preset or custom colors to<br/>generate matching gradient suggestions</div>
-                  </div>
-                : <div>
-                    {/* Role filter */}
-                    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:14}}>
-                      {[["all","All"],["btn-fill","Btn Fill"],["btn-stroke","Btn Stroke"],["frame-fill","Frame Fill"],["frame-stroke","Frame Stroke"],["bg","Background"],["text","Text"]].map(([id,lbl])=>(
-                        <button key={id} onClick={()=>setRoleFilter(id)} style={{
-                          padding:"5px 12px",background:roleFilter===id?"rgba(0,255,136,0.1)":"transparent",
-                          border:`1px solid ${roleFilter===id?"rgba(0,255,136,0.4)":C.br}`,
-                          color:roleFilter===id?C.neon:C.tx2,fontFamily:"'Space Grotesk',sans-serif",fontSize:".6rem",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",borderRadius:2,transition:"all .15s"
-                        }}>{lbl}</button>
-                      ))}
-                    </div>
-
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:1,background:C.br,border:`1px solid ${C.br}`}}>
-                      {filteredSugg.map((s,i)=>{
-                        const ri = ROLE_INFO[s.role];
-                        return (
-                          <div key={i} onClick={()=>copy(s.css,"CSS Copied!")} style={{background:C.bg,cursor:"pointer",transition:"all .2s"}}
-                            onMouseEnter={e=>e.currentTarget.style.background=C.bg3} onMouseLeave={e=>e.currentTarget.style.background=C.bg}>
-                            <div style={{height:80,background:s.css,position:"relative"}}>
-                              <div style={{position:"absolute",top:5,left:5,padding:"2px 7px",background:"rgba(0,0,0,0.7)",borderRadius:2,fontSize:".5rem",fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:ri.col}}>{ri.label}</div>
-                            </div>
-                            <div style={{padding:"9px 12px",borderTop:`1px solid ${C.br}`}}>
-                              <div style={{fontSize:".58rem",fontWeight:700,color:C.tx3,letterSpacing:1.5,textTransform:"uppercase",marginBottom:5}}>{s.label}</div>
-                              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                                {s.colors.map((hex,j)=>(
-                                  <div key={j} onClick={e=>{e.stopPropagation();copy(hex,`${hex} Copied!`);}} style={{display:"flex",alignItems:"center",gap:3,cursor:"pointer"}}>
-                                    <div style={{width:7,height:7,borderRadius:"50%",background:hex,flexShrink:0}}/>
-                                    <span style={{fontSize:".52rem",color:C.tx3,fontFamily:"monospace"}}>{hex}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-              }
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══ PRESETS TAB ══ */}
-      {tab==="presets" && (
-        <div style={{flex:1,padding:28}}>
-          <div style={{textAlign:"center",marginBottom:24}}>
-            <h2 style={{fontSize:"clamp(1.4rem,3vw,2rem)",fontWeight:700,letterSpacing:-1,marginBottom:6}}>Stroke + Fill Pairs</h2>
-            <p style={{fontSize:".75rem",color:C.tx2,fontWeight:300}}>Ready-to-use harmonious combos — click hex to copy, or copy full CSS</p>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:1,background:C.br,border:`1px solid ${C.br}`}}>
-            {PRESET_PAIRS.map((pair,i)=>{
-              const fc=`linear-gradient(135deg,${pair.fill.join(",")})`;
-              const sc=`linear-gradient(135deg,${pair.stroke.join(",")})`;
-              return (
-                <div key={i} style={{background:C.bg,padding:18,transition:"all .2s"}}
-                  onMouseEnter={e=>e.currentTarget.style.background=C.bg3} onMouseLeave={e=>e.currentTarget.style.background=C.bg}>
-                  <div style={{fontSize:".6rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:C.neon,marginBottom:12}}>{pair.name}</div>
-                  <div style={{display:"flex",gap:8,marginBottom:12}}>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:".5rem",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:C.tx3,marginBottom:4}}>Fill</div>
-                      <div style={{height:48,background:fc,borderRadius:2}}/>
-                    </div>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:".5rem",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:C.tx3,marginBottom:4}}>Stroke</div>
-                      <div style={{height:48,background:sc,borderRadius:2}}/>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:10}}>
-                    {[...pair.fill,...pair.stroke].map((hex,j)=>(
-                      <div key={j} onClick={()=>copy(hex,`${hex} Copied!`)} style={{display:"flex",alignItems:"center",gap:3,cursor:"pointer"}}>
-                        <div style={{width:7,height:7,borderRadius:"50%",background:hex}}/>
-                        <span style={{fontSize:".52rem",color:C.tx3,fontFamily:"monospace"}}>{hex}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{display:"flex",gap:4}}>
-                    <button onClick={()=>copy(fc,"Fill CSS Copied!")} style={{flex:1,padding:"7px 0",background:"transparent",border:`1px solid ${C.br2}`,color:C.tx2,fontFamily:"'Space Grotesk',sans-serif",fontSize:".58rem",fontWeight:700,letterSpacing:1,textTransform:"uppercase",cursor:"pointer"}}>Copy Fill</button>
-                    <button onClick={()=>copy(sc,"Stroke CSS Copied!")} style={{flex:1,padding:"7px 0",background:"transparent",border:`1px solid ${C.br2}`,color:C.tx2,fontFamily:"'Space Grotesk',sans-serif",fontSize:".58rem",fontWeight:700,letterSpacing:1,textTransform:"uppercase",cursor:"pointer"}}>Copy Stroke</button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* TOAST */}
-      {toast && (
-        <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:C.neon,color:"#000",padding:"10px 20px",borderRadius:2,fontSize:".7rem",fontWeight:900,letterSpacing:2,textTransform:"uppercase",zIndex:9999,whiteSpace:"nowrap",boxShadow:"0 8px 32px rgba(0,255,136,0.3)"}}>
-          ✓ {toast}
-        </div>
-      )}
-    </div>
-  );
-}import { useState, useRef, useCallback, useEffect } from "react";
-
-// ─── STYLE PRESETS ───────────────────────────────────────────
-const STYLE_PRESETS = [
-  { id:"cartoon",  label:"Cartoon",  emoji:"🎨", colors:["#ff6eb4","#ffdd00","#00ccff","#00ee77","#ff4444","#ffffff"] },
-  { id:"dark",     label:"Dark",     emoji:"🌑", colors:["#0a0a0a","#1a1a1a","#333333","#555555","#888888","#bbbbbb"] },
-  { id:"anime",    label:"Anime",    emoji:"⛩️", colors:["#ff6b9d","#c44dff","#4d79ff","#00d4ff","#ff9500","#ffe066"] },
-  { id:"neon",     label:"Neon",     emoji:"⚡", colors:["#00ff88","#00d4ff","#ff2d78","#8800ff","#ffee00","#ff6600"] },
-  { id:"roblox",   label:"Roblox",   emoji:"🎮", colors:["#cc0000","#0055ff","#ffcc00","#00aa44","#6600cc","#ff6600"] },
-  { id:"pastel",   label:"Pastel",   emoji:"🌸", colors:["#ffb3e6","#b3d9ff","#b3ffcc","#ffe4b3","#e4b3ff","#ffd6b3"] },
-  { id:"fire",     label:"Fire",     emoji:"🔥", colors:["#1a0000","#cc0000","#ff4400","#ff8800","#ffdd00","#fff0aa"] },
-  { id:"ocean",    label:"Ocean",    emoji:"🌊", colors:["#000a1a","#001144","#0044aa","#0088ff","#00ccaa","#aaeeff"] },
-  { id:"sunset",   label:"Sunset",   emoji:"🌇", colors:["#0a0011","#330044","#880044","#ff2266","#ff6600","#ffcc44"] },
-  { id:"mono",     label:"Mono",     emoji:"◻️", colors:["#000000","#111111","#333333","#666666","#aaaaaa","#ffffff"] },
+// === GRADIENTS ===
+const GRADS=[
+{n:'Sunset Blaze',c:['#FF512F','#F09819'],t:'warm'},{n:'Warm Flame',c:['#ff9a9e','#fad0c4'],t:'warm'},
+{n:'Juicy Peach',c:['#ffecd2','#fcb69f'],t:'warm'},{n:'Lady Lips',c:['#ff9a9e','#fecfef'],t:'warm'},
+{n:'Fire Brick',c:['#cb2d3e','#ef473a'],t:'warm'},{n:'Burning',c:['#FF416C','#FF4B2B'],t:'warm'},
+{n:'Mango Pulp',c:['#F09819','#EDDE5D'],t:'warm'},{n:'Bloody Mary',c:['#FF512F','#DD2476'],t:'warm'},
+{n:'Cherry',c:['#EB3349','#F45C43'],t:'warm'},{n:'Flare',c:['#f12711','#f5af19'],t:'warm'},
+{n:'Frozen Dreams',c:['#fdcbf1','#e6dee9'],t:'cool'},{n:'Winter Neva',c:['#a1c4fd','#c2e9fb'],t:'cool'},
+{n:'Dusty Grass',c:['#d4fc79','#96e6a1'],t:'cool'},{n:'Heavy Rain',c:['#cfd9df','#e2ebf0'],t:'cool'},
+{n:'Plum Plate',c:['#667eea','#764ba2'],t:'cool'},{n:'Happy Fisher',c:['#89F7FE','#66A6FF'],t:'cool'},
+{n:'Cold Evening',c:['#0c3483','#a2b6df'],t:'cool'},{n:'Night Sky',c:['#1e3c72','#2a5298'],t:'cool'},
+{n:'Deep Sea',c:['#2b5876','#4e4376'],t:'cool'},{n:'Blue Ocean',c:['#2E3192','#1BFFFF'],t:'cool'},
+{n:'Neon Life',c:['#B6116B','#00FFFF'],t:'neon'},{n:'Neon Glow',c:['#00ff87','#60efff'],t:'neon'},
+{n:'Electric',c:['#4776E6','#8E54E9'],t:'neon'},{n:'Neon Dream',c:['#7B2FFF','#E040FB'],t:'neon'},
+{n:'Matrix',c:['#000000','#00FF00'],t:'neon'},{n:'Synth Wave',c:['#FC00FF','#00DBDE'],t:'neon'},
+{n:'Laser',c:['#CCFF00','#00FF87'],t:'neon'},{n:'Neon City',c:['#FF006E','#8338EC','#3A86FF'],t:'neon'},
+{n:'Rave',c:['#FF00FF','#00FFFF'],t:'neon'},{n:'Aurora',c:['#00FF87','#60EFFF','#7B2FFF'],t:'neon'},
+{n:'Pastel Dream',c:['#FFD1DC','#E6E6FA'],t:'pastel'},{n:'Candy Floss',c:['#FFB7C5','#FFDAB9'],t:'pastel'},
+{n:'Soft Cloud',c:['#E0C3FC','#8EC5FC'],t:'pastel'},{n:'Cotton Candy',c:['#FFAFCC','#BDE0FE'],t:'pastel'},
+{n:'Unicorn',c:['#FEC5E5','#F9D5E5','#EEAECA'],t:'pastel'},{n:'Lollipop',c:['#A6C0FE','#F68084'],t:'pastel'},
+{n:'Blossom',c:['#FBC2EB','#A6C1EE'],t:'pastel'},{n:'Fairy',c:['#F0E6FF','#FFE6F0'],t:'pastel'},
+{n:'Dark Moon',c:['#0F0C29','#302B63','#24243E'],t:'dark'},{n:'Midnight',c:['#232526','#414345'],t:'dark'},
+{n:'Deep Space',c:['#000000','#434343'],t:'dark'},{n:'Blackboard',c:['#1A1A2E','#16213E','#0F3460'],t:'dark'},
+{n:'Dark Ocean',c:['#141E30','#243B55'],t:'dark'},{n:'Abyss',c:['#000428','#004e92'],t:'dark'},
+{n:'Obsidian',c:['#0A0A0A','#1A1A2E'],t:'dark'},{n:'Void',c:['#09203F','#537895'],t:'dark'},
+{n:'Eclipse',c:['#120136','#035AA6'],t:'dark'},{n:'Noir',c:['#1B1B1B','#2C2C2C','#3D3D3D'],t:'dark'},
+{n:'Instagram',c:['#833AB4','#FD1D1D','#FCB045'],t:'brand'},{n:'Discord',c:['#5865F2','#EB459E'],t:'brand'},
+{n:'Spotify',c:['#1DB954','#191414'],t:'brand'},{n:'TikTok',c:['#69C9D0','#EE1D52'],t:'brand'},
+{n:'Twitch',c:['#9146FF','#772CE8'],t:'brand'},{n:'Roblox',c:['#E2231A','#00A2FF'],t:'brand'},
 ];
 
-// ─── GRADIENT SUGGESTION GENERATOR ───────────────────────────
-function mix(hex1, hex2, t) {
-  const a = parseInt(hex1.replace("#",""),16), b = parseInt(hex2.replace("#",""),16);
-  const r = Math.round(((a>>16)&255)*( 1-t) + ((b>>16)&255)*t);
-  const g = Math.round(((a>>8)&255)*(1-t)  + ((b>>8)&255)*t);
-  const bl= Math.round((a&255)*(1-t)        + (b&255)*t);
-  return `#${r.toString(16).padStart(2,"0")}${g.toString(16).padStart(2,"0")}${bl.toString(16).padStart(2,"0")}`;
+const gCats=['all','warm','cool','neon','pastel','dark','brand'];
+const gCatNames={all:'Tümü',warm:'Sıcak',cool:'Soğuk',neon:'Neon',pastel:'Pastel',dark:'Karanlık',brand:'Marka'};
+const gFilters=document.getElementById('gradFilters');
+gCats.forEach(c=>{const b=document.createElement('button');b.className='grad-filter'+(c==='all'?' on':'');
+b.textContent=gCatNames[c];b.dataset.c=c;b.addEventListener('click',()=>{
+document.querySelectorAll('.grad-filter').forEach(x=>x.classList.remove('on'));
+b.classList.add('on');renderGrads()});gFilters.appendChild(b)});
+
+const gGrid=document.getElementById('gradGrid');
+function renderGrads(){
+  const cat=document.querySelector('.grad-filter.on').dataset.c;
+  gGrid.innerHTML='';
+  GRADS.filter(g=>cat==='all'||g.t===cat).forEach(g=>{
+    const gr=`linear-gradient(135deg, ${g.c.join(', ')})`;
+    const card=document.createElement('div');card.className='grad-card';
+    card.innerHTML=`<div class="grad-swatch" style="background:${gr}"></div>
+      <div class="grad-info"><span class="grad-name">${g.n}</span>
+      <button class="grad-copy-btn" title="CSS kopyala"><i class="fas fa-copy"></i></button></div>`;
+    card.querySelector('.grad-copy-btn').addEventListener('click',e=>{
+      e.stopPropagation();cp(`background: ${gr};`)});
+    card.addEventListener('click',()=>{
+      const kp=g.c.map((c,i)=>{const rgb=hexToRgb(c);const p=(i/(g.c.length-1));
+        return`  ColorSequenceKeypoint.new(${p.toFixed(2)}, Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b}))`}).join(',\n');
+      cp(`ColorSequence.new({\n${kp}\n})`);
+    });
+    gGrid.appendChild(card);
+  });
 }
-function dark(c,a){ return mix(c,"#000000",a); }
-function light(c,a){ return mix(c,"#ffffff",a); }
+renderGrads();
 
-function makeSuggestions(picks) {
-  if(!picks.length) return [];
-  const [c0, c1=light(c0,.4), c2=c1, c3=dark(c0,.3)] = picks;
-  return [
-    { role:"btn-fill",    label:"Button Fill",     css:`linear-gradient(135deg,${c0},${c1})`,                 colors:[c0,c1] },
-    { role:"btn-fill",    label:"Button Fill Alt",  css:`linear-gradient(135deg,${dark(c0,.15)},${dark(c1,.15)})`, colors:[dark(c0,.15),dark(c1,.15)] },
-    { role:"btn-fill",    label:"Button Hover",     css:`linear-gradient(135deg,${light(c0,.15)},${light(c1,.15)})`, colors:[light(c0,.15),light(c1,.15)] },
-    { role:"btn-stroke",  label:"Button Stroke",    css:`linear-gradient(135deg,${c0},${c1})`,                 colors:[c0,c1] },
-    { role:"btn-stroke",  label:"Stroke Alt",       css:`linear-gradient(135deg,${c1},${c2})`,                 colors:[c1,c2] },
-    { role:"frame-fill",  label:"Frame Fill",       css:`linear-gradient(160deg,${dark(c0,.75)},${dark(c1,.65)})`, colors:[dark(c0,.75),dark(c1,.65)] },
-    { role:"frame-fill",  label:"Frame Fill 2",     css:`linear-gradient(180deg,${dark(c0,.88)},${dark(c0,.7)})`,  colors:[dark(c0,.88),dark(c0,.7)] },
-    { role:"frame-fill",  label:"Frame Light",      css:`linear-gradient(135deg,${light(c0,.7)},${light(c1,.6)})`, colors:[light(c0,.7),light(c1,.6)] },
-    { role:"frame-stroke",label:"Frame Stroke",     css:`linear-gradient(135deg,${c0},${c1})`,                 colors:[c0,c1] },
-    { role:"frame-stroke",label:"Frame Stroke 2",   css:`linear-gradient(135deg,${light(c0,.2)},${light(c1,.3)})`, colors:[light(c0,.2),light(c1,.3)] },
-    { role:"bg",          label:"Background",       css:`radial-gradient(circle at 30% 20%,${dark(c0,.6)},${dark(c1,.85)})`, colors:[dark(c0,.6),dark(c1,.85)] },
-    { role:"bg",          label:"BG Linear",        css:`linear-gradient(180deg,${dark(c0,.85)},#000000)`,      colors:[dark(c0,.85),"#000000"] },
-    picks.length>=3 ? { role:"btn-fill", label:"3-Stop Button", css:`linear-gradient(135deg,${c0},${c1},${c2})`, colors:[c0,c1,c2] } : null,
-    picks.length>=3 ? { role:"frame-fill", label:"3-Stop Frame", css:`linear-gradient(160deg,${dark(c0,.6)},${dark(c1,.5)},${dark(c2,.5)})`, colors:[dark(c0,.6),dark(c1,.5),dark(c2,.5)] } : null,
-    { role:"text",        label:"Text Gradient",    css:`linear-gradient(135deg,${c0},${c1})`,                 colors:[c0,c1] },
-    { role:"text",        label:"Icon Fill",        css:`radial-gradient(circle,${light(c0,.2)},${c0})`,        colors:[light(c0,.2),c0] },
-  ].filter(Boolean);
-}
+// === GENERATOR ===
+(function(){
+  const moods={
+    custom:null,
+    energetic:{h:[0,50],s:[75,100],l:[45,60],m:'🔥 Enerjik ve canlı renkler ürettim!'},
+    calm:{h:[180,240],s:[25,55],l:[55,75],m:'🌊 Sakin ve huzurlu tonlar hazır.'},
+    dark:{h:[0,360],s:[15,50],l:[8,30],m:'🌑 Karanlık ve derin tonlar oluşturdum.'},
+    cute:{h:[300,370],s:[45,70],l:[70,85],m:'🌸 Kawaii tonlar çok tatlı oldu!'},
+    cyber:{h:[250,320],s:[80,100],l:[40,60],m:'💜 Cyberpunk atmosferi yakaladım!'},
+    nature:{h:[80,160],s:[35,65],l:[30,55],m:'🌿 Doğadan ilham aldım.'},
+    sunset:{h:[0,40],s:[65,90],l:[50,70],m:'🌅 Gün batımı gibi sıcak tonlar!'},
+    ocean:{h:[180,220],s:[50,80],l:[30,55],m:'🌊 Okyanus derinliklerinden renkler.'},
+    galaxy:{h:[250,310],s:[50,85],l:[15,50],m:'🌌 Galaksi tonları hazır!'},
+    candy:{h:[310,390],s:[55,80],l:[65,82],m:'🍬 Şeker gibi tatlı!'},
+    royal:{h:[255,280],s:[50,75],l:[20,45],m:'👑 Kraliyet tonları yüklendi.'},
+    toxic:{h:[85,140],s:[80,100],l:[35,55],m:'☢️ Toxic neon aktif!'},
+    winter:{h:[195,230],s:[15,45],l:[65,85],m:'❄️ Kış tonları buz gibi.'},
+  };
 
-const ROLE_INFO = {
-  "btn-fill":    { label:"Button Fill",    col:"#00ff88" },
-  "btn-stroke":  { label:"Btn Stroke",     col:"#00d4ff" },
-  "frame-fill":  { label:"Frame Fill",     col:"#a855f7" },
-  "frame-stroke":{ label:"Frame Stroke",   col:"#ff2d78" },
-  "bg":          { label:"Background",     col:"#ff9500" },
-  "text":        { label:"Text / Icon",    col:"#ffe066" },
-};
+  const baseColor=document.getElementById('genBaseColor');
+  const baseHex=document.getElementById('genBaseHex');
+  const moodSel=document.getElementById('genMood');
+  const harmSel=document.getElementById('genHarmony');
+  const countS=document.getElementById('genCount');
+  const satS=document.getElementById('genSat');
+  const lightS=document.getElementById('genLight');
+  const countV=document.getElementById('genCountVal');
+  const satV=document.getElementById('genSatVal');
+  const lightV=document.getElementById('genLightVal');
+  let autoI=null;
 
-// ─── GRADIENT EDITOR CORE ────────────────────────────────────
-function buildGradientCSS(stops, type, angle, cx, cy) {
-  const sorted = [...stops].sort((a,b)=>a.pos-b.pos);
-  const stops_str = sorted.map(s=>`${s.color} ${s.pos}%`).join(", ");
-  if(type==="radial") return `radial-gradient(circle at ${cx}% ${cy}%, ${stops_str})`;
-  if(type==="conic")  return `conic-gradient(from ${angle}deg, ${stops_str})`;
-  return `linear-gradient(${angle}deg, ${stops_str})`;
-}
+  baseColor.addEventListener('input',e=>baseHex.value=e.target.value);
+  baseHex.addEventListener('input',e=>{if(/^#[0-9a-f]{6}$/i.test(e.target.value))baseColor.value=e.target.value});
+  countS.addEventListener('input',()=>countV.textContent=countS.value);
+  satS.addEventListener('input',()=>satV.textContent=satS.value);
+  lightS.addEventListener('input',()=>lightV.textContent=lightS.value);
 
-let stopIdCounter = 10;
+  function generate(){
+    const mood=moodSel.value;
+    const harmony=harmSel.value;
+    const count=+countS.value;
+    const satMod=+satS.value;
+    const lightMod=+lightS.value;
+    let colors=[];
 
-export default function App() {
-  // ── TABS
-  const [tab, setTab] = useState("editor"); // editor | picker | presets
+    let baseH,baseS,baseL;
 
-  // ── EDITOR STATE
-  const [stops, setStops] = useState([
-    { id:1, color:"#00ff88", pos:0 },
-    { id:2, color:"#00d4ff", pos:50 },
-    { id:3, color:"#ff2d78", pos:100 },
-  ]);
-  const [selectedStop, setSelectedStop] = useState(1);
-  const [gradType, setGradType] = useState("linear");
-  const [angle, setAngle] = useState(135);
-  const [cx, setCx] = useState(50);
-  const [cy, setCy] = useState(50);
-  const [copied, setCopied] = useState(false);
-  const trackRef = useRef(null);
-  const draggingRef = useRef(null);
-
-  // ── PICKER STATE
-  const [pickedColors, setPickedColors] = useState([]);
-  const [activePreset, setActivePreset] = useState(null);
-  const [customHex, setCustomHex] = useState("#ff6eb4");
-  const [roleFilter, setRoleFilter] = useState("all");
-
-  // ── PRESETS TAB
-  const PRESET_PAIRS = [
-    {name:"Neon Circuit",  fill:["#001a0a","#003322"], stroke:["#00ff88","#00ffcc"]},
-    {name:"Cyber Blue",    fill:["#000a1a","#002255"], stroke:["#00d4ff","#88eeff"]},
-    {name:"Hot Signal",    fill:["#1a0008","#550022"], stroke:["#ff2d78","#ff88bb"]},
-    {name:"UV Edge",       fill:["#0a001a","#1a0033"], stroke:["#8800ff","#dd88ff"]},
-    {name:"Roblox Classic",fill:["#cc0000","#ff3333"], stroke:["#ffffff","#ffeeee"]},
-    {name:"Studio UI",     fill:["#1a1a2a","#2a2a4a"], stroke:["#6666ff","#aaaaff"]},
-    {name:"VIP Gold",      fill:["#1a1100","#332200"], stroke:["#ffdd00","#ffaa44"]},
-    {name:"Anime Sakura",  fill:["#1a0011","#330022"], stroke:["#ff6b9d","#ffccdd"]},
-    {name:"Anime Mana",    fill:["#0a001a","#1a0033"], stroke:["#c44dff","#4d79ff"]},
-    {name:"Fire Edge",     fill:["#1a0000","#330000"], stroke:["#ff4400","#ffaa00"]},
-    {name:"Ocean Depth",   fill:["#000022","#001144"], stroke:["#0088ff","#44ccff"]},
-    {name:"Pastel Dream",  fill:["#fff0f8","#f0f0ff"], stroke:["#ff99cc","#9999ff"]},
-  ];
-
-  // ─── COPY ────────────────────────────────────────────────────
-  const [toast, setToast] = useState(null);
-  const toastTimer = useRef(null);
-  const copy = useCallback((text, msg="Copied!") => {
-    navigator.clipboard.writeText(text).catch(()=>{});
-    clearTimeout(toastTimer.current);
-    setToast(msg);
-    toastTimer.current = setTimeout(()=>setToast(null), 1800);
-  }, []);
-
-  // ─── EDITOR: gradient CSS ─────────────────────────────────
-  const gradCSS = buildGradientCSS(stops, gradType, angle, cx, cy);
-
-  // ─── EDITOR: dragging stops ──────────────────────────────
-  const startDrag = useCallback((e, id) => {
-    e.preventDefault();
-    setSelectedStop(id);
-    draggingRef.current = id;
-    const move = (ev) => {
-      const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-      const rect = trackRef.current?.getBoundingClientRect();
-      if(!rect) return;
-      const raw = ((clientX - rect.left) / rect.width) * 100;
-      const pos = Math.max(0, Math.min(100, Math.round(raw)));
-      setStops(prev => prev.map(s => s.id===draggingRef.current ? {...s, pos} : s));
-    };
-    const up = () => { draggingRef.current = null; window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); window.removeEventListener("touchmove", move); window.removeEventListener("touchend", up); };
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
-    window.addEventListener("touchmove", move, {passive:false});
-    window.addEventListener("touchend", up);
-  }, []);
-
-  const addStop = useCallback((e) => {
-    if(draggingRef.current) return;
-    const rect = trackRef.current?.getBoundingClientRect();
-    if(!rect) return;
-    const pos = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left)/rect.width)*100)));
-    const sorted = [...stops].sort((a,b)=>a.pos-b.pos);
-    let color = "#ffffff";
-    for(let i=0; i<sorted.length-1; i++){
-      if(pos>=sorted[i].pos && pos<=sorted[i+1].pos){
-        const t = (pos-sorted[i].pos)/(sorted[i+1].pos-sorted[i].pos);
-        color = mix(sorted[i].color, sorted[i+1].color, t);
-        break;
-      }
+    if(mood==='custom'){
+      const rgb=hexToRgb(baseColor.value);
+      const hsl=rgbToHsl(rgb.r,rgb.g,rgb.b);
+      baseH=hsl.h;baseS=hsl.s*(satMod/70);baseL=hsl.l*(lightMod/50);
+    }else{
+      const p=moods[mood];
+      baseH=p.h[0]+Math.random()*(p.h[1]-p.h[0]);
+      baseS=p.s[0]+(satMod/100)*(p.s[1]-p.s[0]);
+      baseL=p.l[0]+(lightMod/100)*(p.l[1]-p.l[0]);
+      document.getElementById('botText').textContent=p.m;
     }
-    const newId = ++stopIdCounter;
-    setStops(prev=>[...prev, {id:newId, color, pos}]);
-    setSelectedStop(newId);
-  }, [stops]);
 
-  const removeStop = useCallback((id) => {
-    if(stops.length<=2) return;
-    setStops(prev=>prev.filter(s=>s.id!==id));
-    setSelectedStop(stops.find(s=>s.id!==id)?.id || stops[0].id);
-  }, [stops]);
+    baseS=Math.max(5,Math.min(100,baseS));
+    baseL=Math.max(5,Math.min(95,baseL));
 
-  const updateColor = (id, color) => setStops(prev=>prev.map(s=>s.id===id?{...s,color}:s));
-  const updatePos   = (id, pos)   => setStops(prev=>prev.map(s=>s.id===id?{...s,pos:Number(pos)}:s));
+    switch(harmony){
+      case 'analogous':
+        for(let i=0;i<count;i++){
+          const h=(baseH+(i-Math.floor(count/2))*25+360)%360;
+          const s=baseS+Math.random()*8-4;
+          const l=baseL+(i-Math.floor(count/2))*4;
+          const rgb=hslToRgb(h,Math.max(5,Math.min(100,s)),Math.max(5,Math.min(95,l)));
+          colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
+        }break;
+      case 'complementary':
+        const half=Math.ceil(count/2);
+        for(let i=0;i<half;i++){
+          const h=(baseH+i*12)%360;
+          const rgb=hslToRgb(h,baseS,baseL+(i*5));
+          colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
+        }
+        for(let i=0;i<count-half;i++){
+          const h=(baseH+180+i*12)%360;
+          const rgb=hslToRgb(h,baseS,baseL+(i*5));
+          colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
+        }break;
+      case 'triadic':
+        [0,120,240].forEach((off,oi)=>{
+          const perGroup=Math.ceil(count/3);
+          for(let i=0;i<perGroup&&colors.length<count;i++){
+            const h=(baseH+off+i*10)%360;
+            const rgb=hslToRgb(h,baseS+Math.random()*6-3,baseL+i*4);
+            colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
+          }
+        });break;
+      case 'split':
+        [0,150,210].forEach((off,oi)=>{
+          const perGroup=Math.ceil(count/3);
+          for(let i=0;i<perGroup&&colors.length<count;i++){
+            const h=(baseH+off+i*8)%360;
+            const rgb=hslToRgb(h,baseS,baseL+i*3);
+            colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
+          }
+        });break;
+      case 'tetradic':
+        [0,90,180,270].forEach((off,oi)=>{
+          const perGroup=Math.ceil(count/4);
+          for(let i=0;i<perGroup&&colors.length<count;i++){
+            const h=(baseH+off+i*8)%360;
+            const rgb=hslToRgb(h,baseS,baseL+i*3);
+            colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
+          }
+        });break;
+      case 'monochromatic':
+        for(let i=0;i<count;i++){
+          const l=15+((80/(count-1))*i);
+          const s=baseS+(Math.random()*10-5);
+          const rgb=hslToRgb(baseH,Math.max(5,Math.min(100,s)),Math.max(5,Math.min(95,l)));
+          colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
+        }break;
+    }
 
-  const selStop = stops.find(s=>s.id===selectedStop);
+    colors=colors.slice(0,count);
 
-  // ─── PICKER suggestions ───────────────────────────────────
-  const suggestions = makeSuggestions(pickedColors);
-  const filteredSugg = roleFilter==="all" ? suggestions : suggestions.filter(s=>s.role===roleFilter);
+    // Render
+    document.getElementById('genGrad').style.background=`linear-gradient(90deg, ${colors.join(', ')})`;
+    const cc=document.getElementById('genColors');cc.innerHTML='';
+    colors.forEach(c=>{
+      const ch=document.createElement('div');ch.className='gen-result-chip';
+      ch.innerHTML=`<div class="gen-result-dot" style="background:${c}"></div><span class="gen-result-hex">${c.toUpperCase()}</span>`;
+      ch.addEventListener('click',()=>{
+        const rgb=hexToRgb(c);
+        cp(`Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b})`);
+      });
+      cc.appendChild(ch);
+    });
 
-  // ─── STYLES ───────────────────────────────────────────────
-  const C = { bg:"#080808", bg2:"#0f0f0f", bg3:"#141414", bg4:"#1c1c1c", br:"rgba(255,255,255,0.07)", br2:"rgba(255,255,255,0.13)", tx:"#f0f0f0", tx2:"#777", tx3:"#3a3a3a", neon:"#00ff88" };
+    const codes=document.getElementById('genCodes');
+    const luaV=colors.map((c,i)=>{const rgb=hexToRgb(c);return`local c${i+1} = Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b})`}).join('\n');
+    const kp=colors.map((c,i)=>{const rgb=hexToRgb(c);const p=(i/(colors.length-1));return`  ColorSequenceKeypoint.new(${p.toFixed(2)}, Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b}))`}).join(',\n');
+    const seqCode=`ColorSequence.new({\n${kp}\n})`;
 
-  const pill = (active, onClick, children, col="#00ff88") => (
-    <button onClick={onClick} style={{
-      padding:"5px 14px", fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:".65rem",
-      letterSpacing:2, textTransform:"uppercase", cursor:"pointer", borderRadius:2, border:`1px solid ${active?(col):"rgba(255,255,255,0.1)"}`,
-      background:active?`${col}22`:"transparent", color:active?col:C.tx2, transition:"all .18s"
-    }}>{children}</button>
-  );
-
-  return (
-    <div style={{fontFamily:"'Space Grotesk',sans-serif", background:C.bg, color:C.tx, minHeight:"100vh", display:"flex", flexDirection:"column"}}>
-      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-
-      {/* ══ NAV ══ */}
-      <nav style={{position:"sticky",top:0,zIndex:100,padding:"11px 28px",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(8,8,8,0.96)",borderBottom:`1px solid ${C.br}`,backdropFilter:"blur(24px)"}}>
-        <div style={{fontWeight:700,fontSize:".9rem",letterSpacing:3,textTransform:"uppercase"}}>
-          ▲ <span style={{color:C.neon}}>Gradient</span>Studio<sup style={{fontSize:".38rem",color:C.neon,verticalAlign:"super"}}>®</sup>
+    codes.innerHTML=`
+      <div style="margin-top:12px">
+        <div class="fp-row" onclick="cp(\`${luaV.replace(/`/g,"'")}\`)" style="background:var(--bg3);border-radius:var(--r);padding:10px 12px;cursor:pointer;margin-bottom:6px;border:1px solid var(--border)">
+          <span class="label" style="color:var(--text3);font-size:.7rem;font-weight:600">Lua</span>
+          <span class="value" style="font-size:.68rem;font-weight:600;font-family:monospace;color:var(--text2)">Color3 Değişkenler</span>
+          <i class="fas fa-copy copy-icon" style="opacity:.5;font-size:.7rem"></i>
         </div>
-        <div style={{display:"flex",gap:3}}>
-          {[["editor","⬛ Editor"],["picker","🎨 Style Picker"],["presets","✦ Presets"]].map(([id,lbl])=>(
-            <button key={id} onClick={()=>setTab(id)} style={{
-              padding:"6px 14px", fontFamily:"'Space Grotesk',sans-serif", fontWeight:700, fontSize:".62rem", letterSpacing:2, textTransform:"uppercase",
-              cursor:"pointer", borderRadius:2, border:`1px solid ${tab===id?"rgba(0,255,136,0.4)":C.br}`,
-              background:tab===id?"rgba(0,255,136,0.08)":"transparent", color:tab===id?C.neon:C.tx2, transition:"all .18s"
-            }}>{lbl}</button>
-          ))}
+        <div class="fp-row" onclick="cp(\`${seqCode.replace(/`/g,"'")}\`)" style="background:var(--bg3);border-radius:var(--r);padding:10px 12px;cursor:pointer;border:1px solid var(--border)">
+          <span class="label" style="color:var(--text3);font-size:.7rem;font-weight:600">Lua</span>
+          <span class="value" style="font-size:.68rem;font-weight:600;font-family:monospace;color:var(--text2)">ColorSequence</span>
+          <i class="fas fa-copy copy-icon" style="opacity:.5;font-size:.7rem"></i>
         </div>
-        <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3}}>by M1SLY</div>
-      </nav>
+      </div>`;
+  }
 
-      {/* ══ EDITOR TAB ══ */}
-      {tab==="editor" && (
-        <div style={{flex:1,display:"grid",gridTemplateColumns:"1fr 280px",gap:0}}>
+  document.getElementById('genBtn').addEventListener('click',generate);
+  const autoBtn=document.getElementById('genAutoBtn');
+  autoBtn.addEventListener('click',()=>{
+    if(autoI){clearInterval(autoI);autoI=null;
+      autoBtn.innerHTML='<i class="fas fa-play"></i> Otomatik (3sn)';toast('Durduruldu')}
+    else{generate();autoI=setInterval(generate,3000);
+      autoBtn.innerHTML='<i class="fas fa-stop"></i> Durdur';toast('Otomatik üretim başladı')}
+  });
+  generate();
+})();
 
-          {/* LEFT: Preview + Track */}
-          <div style={{padding:28,display:"flex",flexDirection:"column",gap:16,borderRight:`1px solid ${C.br}`}}>
+// === PREVIEW ===
+(function(){
+  const ids=['pv1','pv2','pv3','pv4','pv5','pv6'];
+  const frame=document.getElementById('pvFrame');
+  const title=document.getElementById('pvTitle');
+  const desc=document.getElementById('pvDesc');
+  const btn=document.getElementById('pvBtn');
+  const bar=document.getElementById('pvBar');
+  const avatar=document.getElementById('pvAvatar');
+  const badge=document.getElementById('pvBadge');
+  const angS=document.getElementById('pvAng');
+  const angV=document.getElementById('pvAngV');
 
-            {/* Big preview */}
-            <div style={{height:220,borderRadius:3,background:gradCSS,border:`1px solid ${C.br}`,position:"relative",cursor:gradType==="radial"?"crosshair":"default",flexShrink:0}}
-              onClick={gradType==="radial" ? (e)=>{const r=e.currentTarget.getBoundingClientRect();setCx(Math.round(((e.clientX-r.left)/r.width)*100));setCy(Math.round(((e.clientY-r.top)/r.height)*100));} : undefined}>
-              {gradType==="radial" && <div style={{position:"absolute",left:`${cx}%`,top:`${cy}%`,transform:"translate(-50%,-50%)",width:12,height:12,borderRadius:"50%",border:"2px solid rgba(255,255,255,0.7)",pointerEvents:"none"}}/>}
-              <div style={{position:"absolute",bottom:8,right:8,fontSize:".58rem",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:"rgba(255,255,255,0.4)"}}>
-                {gradType==="radial"?"click to move center":gradType==="linear"?`${angle}°`:"conic"}
-              </div>
-            </div>
+  function upd(){
+    const v=ids.map(id=>document.getElementById(id).value);
+    const ang=angS.value;angV.textContent=ang;
+    frame.style.background=`linear-gradient(${ang}deg, ${v[0]}, ${v[1]})`;
+    title.style.color=v[2];desc.style.color=v[2];
+    btn.style.background=v[3];btn.style.color=v[4];
+    bar.style.background=`linear-gradient(90deg, ${v[3]}, ${v[5]})`;
+    avatar.style.background=`linear-gradient(135deg, ${v[0]}, ${v[5]})`;
+    badge.style.background=v[5];badge.style.color=v[4];
+  }
 
-            {/* Type + Angle */}
-            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-              {["linear","radial","conic"].map(t=>(
-                <button key={t} onClick={()=>setGradType(t)} style={{
-                  padding:"7px 16px",fontFamily:"'Space Grotesk',sans-serif",fontWeight:700,fontSize:".65rem",letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2,
-                  border:`1px solid ${gradType===t?"rgba(0,255,136,0.5)":C.br}`,background:gradType===t?"rgba(0,255,136,0.1)":"transparent",
-                  color:gradType===t?C.neon:C.tx2,transition:"all .18s"
-                }}>{t}</button>
-              ))}
-              {(gradType==="linear"||gradType==="conic") && (
-                <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
-                  <span style={{fontSize:".6rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:C.tx3,flexShrink:0}}>Angle</span>
-                  <input type="range" min={0} max={360} value={angle} onChange={e=>setAngle(Number(e.target.value))}
-                    style={{flex:1,accentColor:C.neon,cursor:"pointer"}}/>
-                  <span style={{fontSize:".75rem",fontWeight:700,color:C.neon,minWidth:36,textAlign:"right",fontFamily:"monospace"}}>{angle}°</span>
-                </div>
-              )}
-            </div>
+  ids.forEach(id=>{
+    const c=document.getElementById(id),t=document.getElementById(id+'t');
+    c.addEventListener('input',e=>{t.value=e.target.value;upd()});
+    t.addEventListener('input',e=>{if(/^#[0-9a-f]{6}$/i.test(e.target.value)){c.value=e.target.value;upd()}});
+  });
+  angS.addEventListener('input',upd);
 
-            {/* Gradient Track */}
-            <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:"20px 16px 28px",borderRadius:2}}>
-              <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:14}}>Color Stops — click track to add · double-click stop to remove</div>
-
-              {/* Track */}
-              <div ref={trackRef} onClick={addStop} style={{height:28,borderRadius:2,background:buildGradientCSS(stops,"linear",90,50,50),position:"relative",cursor:"crosshair",border:`1px solid ${C.br}`,userSelect:"none"}}>
-                {stops.map(s=>(
-                  <div key={s.id}
-                    onMouseDown={e=>startDrag(e,s.id)}
-                    onTouchStart={e=>startDrag(e,s.id)}
-                    onDoubleClick={e=>{e.stopPropagation();removeStop(s.id);}}
-                    onClick={e=>{e.stopPropagation();setSelectedStop(s.id);}}
-                    style={{
-                      position:"absolute",top:"50%",left:`${s.pos}%`,transform:"translate(-50%,-50%)",
-                      width:22,height:22,borderRadius:3,background:s.color,
-                      border:selectedStop===s.id?"3px solid #fff":"2px solid rgba(255,255,255,0.4)",
-                      cursor:"grab",zIndex:2,transition:"border .1s",boxShadow:selectedStop===s.id?`0 0 0 2px ${C.neon}55`:"none",
-                      outline:s.color==="#ffffff"?"1px solid #333":"none"
-                    }}/>
-                ))}
-              </div>
-
-              {/* Stops list */}
-              <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:2}}>
-                {[...stops].sort((a,b)=>a.pos-b.pos).map(s=>(
-                  <div key={s.id} onClick={()=>setSelectedStop(s.id)} style={{
-                    display:"flex",alignItems:"center",gap:10,padding:"6px 10px",
-                    background:selectedStop===s.id?"rgba(0,255,136,0.06)":"transparent",
-                    border:`1px solid ${selectedStop===s.id?"rgba(0,255,136,0.2)":"transparent"}`,borderRadius:2,cursor:"pointer"
-                  }}>
-                    <div style={{width:18,height:18,borderRadius:2,background:s.color,border:"1px solid rgba(255,255,255,0.15)",flexShrink:0}}/>
-                    <span style={{fontSize:".7rem",fontFamily:"monospace",color:C.tx2,flex:1}}>{s.color}</span>
-                    <span style={{fontSize:".65rem",color:C.tx3,fontFamily:"monospace"}}>{s.pos}%</span>
-                    {stops.length>2 && (
-                      <button onClick={e=>{e.stopPropagation();removeStop(s.id);}} style={{
-                        width:16,height:16,borderRadius:2,background:"transparent",border:"none",color:C.tx3,cursor:"pointer",fontSize:".65rem",
-                        display:"flex",alignItems:"center",justifyContent:"center",transition:"color .15s"
-                      }} onMouseEnter={e=>e.currentTarget.style.color="#ff2d78"} onMouseLeave={e=>e.currentTarget.style.color=C.tx3}>✕</button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* CSS Output */}
-            <div style={{background:C.bg2,border:`1px solid ${C.br}`,borderRadius:2,overflow:"hidden"}}>
-              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 14px",borderBottom:`1px solid ${C.br}`}}>
-                <span style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3}}>CSS Output</span>
-                <button onClick={()=>copy(`background: ${gradCSS};`,"CSS Copied!")} style={{
-                  padding:"5px 14px",background:copied?"rgba(0,255,136,0.1)":C.neon,color:copied?"#00ff88":"#000",border:copied?`1px solid ${C.neon}`:"none",
-                  fontFamily:"'Space Grotesk',sans-serif",fontSize:".6rem",fontWeight:900,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2,transition:"all .2s"
-                }}>⎘ Copy CSS</button>
-              </div>
-              <div style={{padding:14,fontFamily:"monospace",fontSize:".75rem",color:C.neon,lineHeight:1.7,wordBreak:"break-all",userSelect:"all"}}>
-                background: {gradCSS};
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: Stop editor */}
-          <div style={{padding:20,display:"flex",flexDirection:"column",gap:10}}>
-            <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3}}>Selected Stop</div>
-
-            {selStop && (
-              <>
-                {/* Color picker */}
-                <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:14,borderRadius:2}}>
-                  <div style={{height:70,borderRadius:2,background:selStop.color,border:"1px solid rgba(255,255,255,0.1)",marginBottom:12,position:"relative"}}>
-                    <div onClick={()=>copy(selStop.color,`${selStop.color} copied!`)} style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.2)",cursor:"pointer",borderRadius:2,fontSize:".65rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(255,255,255,0.6)",opacity:0,transition:"opacity .15s"}}
-                      onMouseEnter={e=>e.currentTarget.style.opacity=1} onMouseLeave={e=>e.currentTarget.style.opacity=0}>⎘ {selStop.color}</div>
-                  </div>
-                  <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}>
-                    <input type="color" value={selStop.color} onChange={e=>updateColor(selStop.id,e.target.value)}
-                      style={{width:44,height:36,border:"none",background:"none",cursor:"pointer",borderRadius:2,flexShrink:0}}/>
-                    <input value={selStop.color} onChange={e=>{if(/^#[0-9a-fA-F]{0,6}$/.test(e.target.value))updateColor(selStop.id,e.target.value);}}
-                      style={{flex:1,background:C.bg3,border:`1px solid ${C.br2}`,color:C.tx,fontFamily:"monospace",fontSize:".8rem",padding:"7px 10px",outline:"none",borderRadius:2}}/>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:".58rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:C.tx3,flexShrink:0}}>Pos</span>
-                    <input type="range" min={0} max={100} value={selStop.pos} onChange={e=>updatePos(selStop.id,e.target.value)}
-                      style={{flex:1,accentColor:C.neon,cursor:"pointer"}}/>
-                    <span style={{fontSize:".72rem",fontFamily:"monospace",color:C.neon,minWidth:32,textAlign:"right"}}>{selStop.pos}%</span>
-                  </div>
-                </div>
-
-                {/* Quick palette */}
-                <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:14,borderRadius:2}}>
-                  <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:10}}>Quick Colors</div>
-                  {[
-                    ["#00ff88","#00d4ff","#ff2d78","#8800ff","#ffee00"],
-                    ["#ff6eb4","#ff6600","#cc0000","#0055ff","#00aa44"],
-                    ["#ffffff","#aaaaaa","#555555","#222222","#000000"],
-                    ["#ffb3e6","#b3d9ff","#b3ffcc","#ffe4b3","#e4b3ff"],
-                  ].map((row,ri)=>(
-                    <div key={ri} style={{display:"flex",gap:5,marginBottom:5}}>
-                      {row.map(c=>(
-                        <div key={c} onClick={()=>updateColor(selStop.id,c)} style={{
-                          width:32,height:24,borderRadius:2,background:c,cursor:"pointer",
-                          border:selStop.color===c?"2px solid #fff":"1px solid rgba(255,255,255,0.1)",
-                          outline:c==="#ffffff"?"1px solid #333":"none",transition:"transform .1s",flexShrink:0
-                        }} onMouseEnter={e=>e.currentTarget.style.transform="scale(1.15)"} onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}/>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* Radial center */}
-            {gradType==="radial" && (
-              <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:14,borderRadius:2}}>
-                <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:10}}>Center Point (click preview)</div>
-                <div style={{display:"flex",gap:8,marginBottom:6}}>
-                  <span style={{fontSize:".62rem",color:C.tx3,width:16}}>X</span>
-                  <input type="range" min={0} max={100} value={cx} onChange={e=>setCx(Number(e.target.value))} style={{flex:1,accentColor:C.neon,cursor:"pointer"}}/>
-                  <span style={{fontSize:".65rem",fontFamily:"monospace",color:C.neon,minWidth:32,textAlign:"right"}}>{cx}%</span>
-                </div>
-                <div style={{display:"flex",gap:8}}>
-                  <span style={{fontSize:".62rem",color:C.tx3,width:16}}>Y</span>
-                  <input type="range" min={0} max={100} value={cy} onChange={e=>setCy(Number(e.target.value))} style={{flex:1,accentColor:C.neon,cursor:"pointer"}}/>
-                  <span style={{fontSize:".65rem",fontFamily:"monospace",color:C.neon,minWidth:32,textAlign:"right"}}>{cy}%</span>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <button onClick={()=>{
-              const newId=++stopIdCounter;
-              const pos=Math.round(Math.random()*80+10);
-              setStops(prev=>[...prev,{id:newId,color:"#ffffff",pos}]);
-              setSelectedStop(newId);
-            }} style={{padding:"9px",background:"transparent",border:`1px solid ${C.br2}`,color:C.tx2,fontFamily:"'Space Grotesk',sans-serif",fontSize:".62rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2}}>+ Add Stop</button>
-
-            <button onClick={()=>{
-              const preset=STYLE_PRESETS[Math.floor(Math.random()*STYLE_PRESETS.length)];
-              const newStops=preset.colors.slice(0,3+Math.floor(Math.random()*2)).map((c,i,arr)=>({id:++stopIdCounter,color:c,pos:Math.round(i/(arr.length-1)*100)}));
-              setStops(newStops);
-              setSelectedStop(newStops[0].id);
-            }} style={{padding:"9px",background:`rgba(0,255,136,0.06)`,border:`1px solid rgba(0,255,136,0.2)`,color:C.neon,fontFamily:"'Space Grotesk',sans-serif",fontSize:".62rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2}}>⚡ Random</button>
-          </div>
-        </div>
-      )}
-
-      {/* ══ PICKER TAB ══ */}
-      {tab==="picker" && (
-        <div style={{flex:1,padding:28}}>
-          <div style={{textAlign:"center",marginBottom:28}}>
-            <h2 style={{fontSize:"clamp(1.4rem,3vw,2rem)",fontWeight:700,letterSpacing:-1,marginBottom:6}}>
-              Pick a Style → Get <span style={{color:C.neon}}>Matching Gradients</span>
-            </h2>
-            <p style={{fontSize:".75rem",color:C.tx2,fontWeight:300}}>Select preset colors or add custom — generates button fill, frame, stroke & background</p>
-          </div>
-
-          <div style={{display:"grid",gridTemplateColumns:"280px 1fr",gap:14,maxWidth:1100,margin:"0 auto"}}>
-
-            {/* LEFT */}
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-
-              {/* Presets */}
-              <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:16,borderRadius:2}}>
-                <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.neon,marginBottom:10}}>Style Presets</div>
-                {STYLE_PRESETS.map(p=>(
-                  <div key={p.id} onClick={()=>{setActivePreset(p.id);setPickedColors(p.colors.slice(0,3));}} style={{
-                    display:"flex",alignItems:"center",gap:10,padding:"7px 10px",borderRadius:2,cursor:"pointer",marginBottom:2,
-                    background:activePreset===p.id?"rgba(0,255,136,0.07)":"transparent",
-                    border:`1px solid ${activePreset===p.id?"rgba(0,255,136,0.25)":"transparent"}`,transition:"all .15s"
-                  }}>
-                    <span style={{fontSize:"1rem"}}>{p.emoji}</span>
-                    <span style={{flex:1,fontSize:".78rem",fontWeight:600,color:activePreset===p.id?C.neon:C.tx}}>{p.label}</span>
-                    <div style={{display:"flex",gap:3}}>
-                      {p.colors.slice(0,5).map((c,i)=>(
-                        <div key={i} style={{width:9,height:9,borderRadius:"50%",background:c,border:c==="#ffffff"||c==="#000000"?"1px solid #444":"none"}}/>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Preset colors */}
-              {activePreset && (
-                <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:16,borderRadius:2}}>
-                  <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:10}}>Pick up to 5</div>
-                  <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-                    {STYLE_PRESETS.find(p=>p.id===activePreset)?.colors.map((c,i)=>(
-                      <div key={i} onClick={()=>{ if(pickedColors.includes(c))setPickedColors(pickedColors.filter(x=>x!==c)); else if(pickedColors.length<5)setPickedColors([...pickedColors,c]); }} style={{cursor:"pointer",textAlign:"center"}}>
-                        <div style={{width:36,height:36,borderRadius:3,background:c,border:pickedColors.includes(c)?"2px solid #00ff88":"2px solid transparent",outline:c==="#ffffff"?"1px solid #333":"none",transition:"all .15s",transform:pickedColors.includes(c)?"scale(1.18)":"scale(1)",marginBottom:3}}/>
-                        <div style={{fontSize:".48rem",color:C.tx3,fontFamily:"monospace"}}>{c}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Custom */}
-              <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:16,borderRadius:2}}>
-                <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:10}}>Custom Color</div>
-                <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                  <input type="color" value={customHex} onChange={e=>setCustomHex(e.target.value)} style={{width:44,height:40,border:"none",background:"none",cursor:"pointer",borderRadius:3}}/>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:".75rem",fontWeight:700,fontFamily:"monospace",marginBottom:5}}>{customHex}</div>
-                    <button onClick={()=>{ if(!pickedColors.includes(customHex)&&pickedColors.length<5)setPickedColors([...pickedColors,customHex]); }} style={{padding:"4px 12px",background:C.neon,color:"#000",border:"none",fontFamily:"'Space Grotesk',sans-serif",fontSize:".6rem",fontWeight:900,letterSpacing:2,textTransform:"uppercase",cursor:"pointer",borderRadius:2}}>+ Add</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Selected */}
-              <div style={{background:C.bg2,border:`1px solid ${C.br}`,padding:16,borderRadius:2}}>
-                <div style={{fontSize:".58rem",fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.tx3,marginBottom:8}}>Selected ({pickedColors.length}/5)</div>
-                {pickedColors.length===0
-                  ? <div style={{fontSize:".72rem",color:C.tx3,textAlign:"center",padding:"8px 0"}}>Pick colors above ↑</div>
-                  : <>
-                    <div style={{height:36,borderRadius:2,background:`linear-gradient(135deg,${pickedColors.join(",")})`,border:`1px solid ${C.br}`,marginBottom:10}}/>
-                    <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                      {pickedColors.map((c,i)=>(
-                        <div key={i} onClick={()=>setPickedColors(pickedColors.filter(x=>x!==c))} title="click to remove" style={{cursor:"pointer",textAlign:"center"}}>
-                          <div style={{width:28,height:28,borderRadius:2,background:c,border:"1px solid rgba(255,255,255,0.1)"}}/>
-                          <div style={{fontSize:".45rem",color:C.tx3,fontFamily:"monospace",marginTop:2}}>{c}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <button onClick={()=>{setPickedColors([]);setActivePreset(null);}} style={{marginTop:8,padding:"4px 10px",background:"transparent",border:`1px solid ${C.br}`,color:C.tx3,fontFamily:"'Space Grotesk',sans-serif",fontSize:".58rem",fontWeight:700,letterSpacing:1,textTransform:"uppercase",cursor:"pointer",borderRadius:2}}>Clear All</button>
-                  </>
-                }
-              </div>
-            </div>
-
-            {/* RIGHT: Results */}
-            <div>
-              {pickedColors.length===0
-                ? <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100%",flexDirection:"column",gap:10}}>
-                    <div style={{fontSize:"3rem"}}>🎨</div>
-                    <div style={{fontSize:".78rem",color:C.tx3,textAlign:"center",fontWeight:300}}>Select a preset or custom colors to<br/>generate matching gradient suggestions</div>
-                  </div>
-                : <div>
-                    {/* Role filter */}
-                    <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:14}}>
-                      {[["all","All"],["btn-fill","Btn Fill"],["btn-stroke","Btn Stroke"],["frame-fill","Frame Fill"],["frame-stroke","Frame Stroke"],["bg","Background"],["text","Text"]].map(([id,lbl])=>(
-                        <button key={id} onClick={()=>setRoleFilter(id)} style={{
-                          padding:"5px 12px",background:roleFilter===id?"rgba(0,255,136,0.1)":"transparent",
-                          border:`1px solid ${roleFilter===id?"rgba(0,255,136,0.4)":C.br}`,
-                          color:roleFilter===id?C.neon:C.tx2,fontFamily:"'Space Grotesk',sans-serif",fontSize:".6rem",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",cursor:"pointer",borderRadius:2,transition:"all .15s"
-                        }}>{lbl}</button>
-                      ))}
-                    </div>
-
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:1,background:C.br,border:`1px solid ${C.br}`}}>
-                      {filteredSugg.map((s,i)=>{
-                        const ri = ROLE_INFO[s.role];
-                        return (
-                          <div key={i} onClick={()=>copy(s.css,"CSS Copied!")} style={{background:C.bg,cursor:"pointer",transition:"all .2s"}}
-                            onMouseEnter={e=>e.currentTarget.style.background=C.bg3} onMouseLeave={e=>e.currentTarget.style.background=C.bg}>
-                            <div style={{height:80,background:s.css,position:"relative"}}>
-                              <div style={{position:"absolute",top:5,left:5,padding:"2px 7px",background:"rgba(0,0,0,0.7)",borderRadius:2,fontSize:".5rem",fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:ri.col}}>{ri.label}</div>
-                            </div>
-                            <div style={{padding:"9px 12px",borderTop:`1px solid ${C.br}`}}>
-                              <div style={{fontSize:".58rem",fontWeight:700,color:C.tx3,letterSpacing:1.5,textTransform:"uppercase",marginBottom:5}}>{s.label}</div>
-                              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                                {s.colors.map((hex,j)=>(
-                                  <div key={j} onClick={e=>{e.stopPropagation();copy(hex,`${hex} Copied!`);}} style={{display:"flex",alignItems:"center",gap:3,cursor:"pointer"}}>
-                                    <div style={{width:7,height:7,borderRadius:"50%",background:hex,flexShrink:0}}/>
-                                    <span style={{fontSize:".52rem",color:C.tx3,fontFamily:"monospace"}}>{hex}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-              }
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══ PRESETS TAB ══ */}
-      {tab==="presets" && (
-        <div style={{flex:1,padding:28}}>
-          <div style={{textAlign:"center",marginBottom:24}}>
-            <h2 style={{fontSize:"clamp(1.4rem,3vw,2rem)",fontWeight:700,letterSpacing:-1,marginBottom:6}}>Stroke + Fill Pairs</h2>
-            <p style={{fontSize:".75rem",color:C.tx2,fontWeight:300}}>Ready-to-use harmonious combos — click hex to copy, or copy full CSS</p>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:1,background:C.br,border:`1px solid ${C.br}`}}>
-            {PRESET_PAIRS.map((pair,i)=>{
-              const fc=`linear-gradient(135deg,${pair.fill.join(",")})`;
-              const sc=`linear-gradient(135deg,${pair.stroke.join(",")})`;
-              return (
-                <div key={i} style={{background:C.bg,padding:18,transition:"all .2s"}}
-                  onMouseEnter={e=>e.currentTarget.style.background=C.bg3} onMouseLeave={e=>e.currentTarget.style.background=C.bg}>
-                  <div style={{fontSize:".6rem",fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:C.neon,marginBottom:12}}>{pair.name}</div>
-                  <div style={{display:"flex",gap:8,marginBottom:12}}>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:".5rem",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:C.tx3,marginBottom:4}}>Fill</div>
-                      <div style={{height:48,background:fc,borderRadius:2}}/>
-                    </div>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:".5rem",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:C.tx3,marginBottom:4}}>Stroke</div>
-                      <div style={{height:48,background:sc,borderRadius:2}}/>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:10}}>
-                    {[...pair.fill,...pair.stroke].map((hex,j)=>(
-                      <div key={j} onClick={()=>copy(hex,`${hex} Copied!`)} style={{display:"flex",alignItems:"center",gap:3,cursor:"pointer"}}>
-                        <div style={{width:7,height:7,borderRadius:"50%",background:hex}}/>
-                        <span style={{fontSize:".52rem",color:C.tx3,fontFamily:"monospace"}}>{hex}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{display:"flex",gap:4}}>
-                    <button onClick={()=>copy(fc,"Fill CSS Copied!")} style={{flex:1,padding:"7px 0",background:"transparent",border:`1px solid ${C.br2}`,color:C.tx2,fontFamily:"'Space Grotesk',sans-serif",fontSize:".58rem",fontWeight:700,letterSpacing:1,textTransform:"uppercase",cursor:"pointer"}}>Copy Fill</button>
-                    <button onClick={()=>copy(sc,"Stroke CSS Copied!")} style={{flex:1,padding:"7px 0",background:"transparent",border:`1px solid ${C.br2}`,color:C.tx2,fontFamily:"'Space Grotesk',sans-serif",fontSize:".58rem",fontWeight:700,letterSpacing:1,textTransform:"uppercase",cursor:"pointer"}}>Copy Stroke</button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* TOAST */}
-      {toast && (
-        <div style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",background:C.neon,color:"#000",padding:"10px 20px",borderRadius:2,fontSize:".7rem",fontWeight:900,letterSpacing:2,textTransform:"uppercase",zIndex:9999,whiteSpace:"nowrap",boxShadow:"0 8px 32px rgba(0,255,136,0.3)"}}>
-          ✓ {toast}
-        </div>
-      )}
-    </div>
-  );
-}
+  document.getElementById('pvRandom').addEventListener('click',()=>{
+    ids.forEach(id=>{const c=randHex();
+      document.getElementById(id).value=c;document.getElementById(id+'t').value=c});
+    upd();toast('Rastgele renkler yüklendi')});
+  upd();
+})();
+</script>
+</body>
+</html>
