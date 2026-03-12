@@ -1,613 +1,316 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Gradients — by M1SLY</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1c1c1c;--tx:#f0f0f0;--tx2:#888;--tx3:#444;--br:rgba(255,255,255,.07);--br2:rgba(255,255,255,.12)}
-html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;z-index:0;opacity:.018;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+import { useState, useCallback } from "react";
 
-/* NAV */
-nav{position:sticky;top:0;z-index:100;padding:14px 40px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,8,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--br)}
-.logo{font-weight:900;font-size:1.1rem;letter-spacing:2px;text-transform:uppercase;color:var(--tx)}
-.logo sup{font-size:.5rem;color:#00ff88;letter-spacing:0;vertical-align:super}
-.nav-sub{font-size:.7rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--tx3)}
-
-/* HERO */
-.hero{text-align:center;padding:60px 40px 40px;position:relative;z-index:1}
-.hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:10px}
-.hero h1 span{background:linear-gradient(135deg,#00ff88,#00d4ff,#ff2d78);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{font-size:.88rem;color:var(--tx2);font-weight:300;letter-spacing:.5px}
-
-/* CONTROLS */
-.controls{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:0 40px 28px;position:relative;z-index:1}
-.cat-btn{padding:7px 16px;background:transparent;border:1px solid var(--br2);border-radius:3px;color:var(--tx3);font-family:'Inter',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
-.cat-btn:hover{border-color:rgba(255,255,255,.25);color:var(--tx2)}
-.cat-btn.act{background:#fff;color:#000;border-color:#fff}
-.sep{width:1px;height:24px;background:var(--br);margin:0 4px}
-.gen-btn{padding:7px 18px;background:linear-gradient(135deg,#00ff88,#00d4ff);color:#000;border:none;border-radius:3px;font-family:'Inter',sans-serif;font-size:.7rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
-.gen-btn:hover{opacity:.85;transform:translateY(-1px)}
-
-/* TYPE TOGGLE */
-.type-row{display:flex;justify-content:center;gap:6px;padding:0 40px 32px;flex-wrap:wrap;position:relative;z-index:1}
-.type-btn{padding:5px 14px;background:transparent;border:1px solid var(--br);border-radius:2px;color:var(--tx3);font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
-.type-btn:hover{border-color:rgba(255,255,255,.2);color:var(--tx2)}
-.type-btn.act{border-color:#00ff88;color:#00ff88}
-
-/* GRID */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--br);border:1px solid var(--br);margin:0 40px 60px;position:relative;z-index:1}
-.card{background:var(--bg);cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
-.card:hover{background:var(--bg2);z-index:2;transform:scale(1.01)}
-.card:hover .card-overlay{opacity:1}
-.card-preview{height:130px;position:relative}
-.card-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;gap:8px}
-.copy-btn-small{padding:5px 12px;background:rgba(255,255,255,.9);color:#000;border:none;border-radius:2px;font-family:'Inter',sans-serif;font-size:.62rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .15s}
-.copy-btn-small:hover{background:#fff}
-.card-info{padding:12px 14px;border-top:1px solid var(--br)}
-.card-type{font-size:.58rem;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:5px}
-.card-colors{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
-.color-swatch{display:flex;align-items:center;gap:4px;cursor:pointer;transition:all .15s}
-.color-swatch:hover .swatch-dot{transform:scale(1.3)}
-.swatch-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:transform .15s}
-.swatch-hex{font-size:.62rem;font-weight:600;color:var(--tx3);letter-spacing:.5px;font-family:'Inter',sans-serif}
-.color-swatch:hover .swatch-hex{color:var(--tx2)}
-
-/* TOAST */
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:#fff;color:#000;padding:10px 22px;border-radius:3px;font-size:.75rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-
-/* STROKE/FILL SECTION */
-.sf-section{margin:0 40px 60px;position:relative;z-index:1}
-.sf-title{font-size:.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#00ff88;margin-bottom:16px}
-.sf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1px;background:var(--br);border:1px solid var(--br)}
-.sf-card{background:var(--bg);padding:20px;cursor:pointer;transition:all .25s;position:relative}
-.sf-card:hover{background:var(--bg2)}
-.sf-card:hover .sf-overlay{opacity:1}
-.sf-overlay{position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s}
-.sf-preview{display:flex;gap:12px;align-items:center;margin-bottom:14px}
-.sf-stroke-box{width:60px;height:60px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.sf-fill-box{width:60px;height:60px;border-radius:4px;flex-shrink:0}
-.sf-label{font-size:.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);margin-bottom:3px}
-.sf-colors{display:flex;gap:5px;flex-wrap:wrap}
-.sf-copy-row{display:flex;gap:6px;margin-top:10px}
-.sf-copy-btn{flex:1;padding:6px 8px;background:transparent;border:1px solid var(--br2);color:var(--tx3);font-family:'Inter',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s}
-.sf-copy-btn:hover{border-color:#00ff88;color:#00ff88}
-
-/* GENERATE RANDOM */
-.gen-section{margin:0 40px 60px;position:relative;z-index:1}
-.gen-box{background:var(--bg2);border:1px solid var(--br);padding:28px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
-.gen-preview{display:flex;gap:10px;flex:1;min-width:200px}
-.gen-grad-box{flex:1;height:70px;border-radius:3px;transition:all .4s}
-.gen-info{flex:1;min-width:180px}
-.gen-info-label{font-size:.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--tx3);margin-bottom:8px}
-.gen-hex-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.gen-hex{font-size:.72rem;font-weight:700;color:var(--tx2);font-family:'Inter',sans-serif;cursor:pointer;padding:3px 8px;border:1px solid var(--br);border-radius:2px;transition:all .2s}
-.gen-hex:hover{border-color:#00ff88;color:#00ff88}
-.gen-btns{display:flex;gap:6px;flex-wrap:wrap}
-
-/* FOOTER */
-footer{text-align:center;padding:24px;border-top:1px solid var(--br);position:relative;z-index:1}
-footer p{font-size:.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--tx3)}
-footer span{color:#00ff88}
-
-@media(max-width:600px){
-  nav{padding:12px 20px}
-  .hero{padding:40px 20px 28px}
-  .controls,.type-row{padding:0 20px 20px}
-  .grid,.sf-section,.gen-section{margin:0 0 40px}
-  .sf-section,.gen-section{margin:0 20px 40px}
-}
-</style>
-</head>
-<body>
-
-<nav>
-  <div class="logo">Gradients<sup>®</sup></div>
-  <div class="nav-sub">by M1SLY</div>
-</nav>
-
-<div class="hero">
-  <h1>Pick a <span>Gradient.</span></h1>
-  <p>Click any color to copy hex — click card to copy full CSS gradient</p>
-</div>
-
-<div class="controls" id="cats"></div>
-<div class="type-row" id="types"></div>
-
-<!-- RANDOM GENERATOR -->
-<div class="gen-section">
-  <div class="sf-title">⚡ Random Generator — Stroke + Fill</div>
-  <div class="gen-box">
-    <div class="gen-preview">
-      <div style="display:flex;flex-direction:column;gap:6px;flex:1">
-        <div style="font-size:.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tx3)">FILL</div>
-        <div class="gen-grad-box" id="genFill"></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;flex:1">
-        <div style="font-size:.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tx3)">STROKE</div>
-        <div class="gen-grad-box" id="genStroke"></div>
-      </div>
-    </div>
-    <div class="gen-info">
-      <div class="gen-info-label">Fill Colors</div>
-      <div class="gen-hex-row" id="genFillHex"></div>
-      <div class="gen-info-label" style="margin-top:8px">Stroke Colors</div>
-      <div class="gen-hex-row" id="genStrokeHex"></div>
-      <div class="gen-btns" style="margin-top:14px">
-        <button class="gen-btn" onclick="generateRandom()">⚡ Generate</button>
-        <button class="copy-btn-small" style="padding:7px 14px;background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--tx2)" onclick="copyGenFill()">Copy Fill CSS</button>
-        <button class="copy-btn-small" style="padding:7px 14px;background:transparent;border:1px solid rgba(255,255,255,.15);color:var(--tx2)" onclick="copyGenStroke()">Copy Stroke CSS</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- STROKE + FILL PAIRS -->
-<div class="sf-section">
-  <div class="sf-title">🎨 Stroke + Fill Pairs</div>
-  <div class="sf-grid" id="sfGrid"></div>
-</div>
-
-<!-- MAIN GRADIENT GRID -->
-<div class="grid" id="grid"></div>
-
-<div class="toast" id="toast"></div>
-
-<footer><p>Gradients — <span>by M1SLY®</span></p></footer>
-
-<script>
-// ══════════ DATA ══════════
-
-const CATEGORIES = [
-  {id:'all', label:'All'},
-  {id:'smooth', label:'Smooth'},
-  {id:'cartoon', label:'Cartoon'},
-  {id:'dark', label:'Dark → Light'},
-  {id:'light', label:'Light → Dark'},
-  {id:'rainbow', label:'Rainbow'},
-  {id:'roblox', label:'Roblox'},
-  {id:'neon', label:'Neon'},
-  {id:'pastel', label:'Pastel'},
-  {id:'fire', label:'Fire'},
-  {id:'ocean', label:'Ocean'},
-  {id:'sunset', label:'Sunset'},
-];
-
-const TYPES = ['All Types','Linear','Radial','Conic','Diagonal','Stroke','Fill'];
-
-let activeCat = 'all';
-let activeType = 'All Types';
-let genFillData = null;
-let genStrokeData = null;
+const CATS = ["All","Smooth","Cartoon","Dark→Light","Light→Dark","Rainbow","Roblox","Neon","Pastel","Fire","Ocean","Sunset"];
 
 const GRADIENTS = [
-  // SMOOTH
-  {cat:'smooth',type:'linear',name:'Silk White',colors:['#ffffff','#e0e0e0','#b0b0b0'],angle:135},
-  {cat:'smooth',type:'linear',name:'Ash Cloud',colors:['#2c2c2c','#6b6b6b','#c0c0c0'],angle:160},
-  {cat:'smooth',type:'radial',name:'Pearl',colors:['#f5f5f5','#cccccc','#888888']},
-  {cat:'smooth',type:'linear',name:'Smoke',colors:['#0a0a0a','#3a3a3a','#888888'],angle:180},
-  {cat:'smooth',type:'linear',name:'Mist',colors:['#e8e8e8','#f5f5f5','#ffffff'],angle:90},
-  {cat:'smooth',type:'diagonal',name:'Graphite',colors:['#1a1a1a','#404040','#808080'],angle:45},
-
-  // CARTOON
-  {cat:'cartoon',type:'linear',name:'Bubblegum',colors:['#ff6eb4','#ff9de2','#ffd6f5'],angle:135},
-  {cat:'cartoon',type:'linear',name:'Sky Pop',colors:['#00b4ff','#66d9ff','#ccf5ff'],angle:120},
-  {cat:'cartoon',type:'radial',name:'Sun Burst',colors:['#ffdd00','#ffaa00','#ff6600']},
-  {cat:'cartoon',type:'linear',name:'Lime Punch',colors:['#00ff88','#88ff00','#ccff66'],angle:90},
-  {cat:'cartoon',type:'linear',name:'Candy Stripe',colors:['#ff4488','#ff88bb','#ffccdd'],angle:160},
-  {cat:'cartoon',type:'linear',name:'Blue Raspberry',colors:['#0044ff','#4488ff','#aaccff'],angle:135},
-
-  // DARK TO LIGHT
-  {cat:'dark',type:'linear',name:'Night Fog',colors:['#000000','#1a1a2e','#4a4a8a'],angle:135},
-  {cat:'dark',type:'linear',name:'Coal Rise',colors:['#0a0a0a','#2d2d2d','#888888'],angle:180},
-  {cat:'dark',type:'linear',name:'Abyss',colors:['#000000','#001122','#0044aa'],angle:120},
-  {cat:'dark',type:'radial',name:'Black Hole',colors:['#000000','#111111','#333333']},
-  {cat:'dark',type:'linear',name:'Void Edge',colors:['#000000','#0a0a0a','#1a1a1a'],angle:90},
-  {cat:'dark',type:'linear',name:'Shadow Lift',colors:['#050505','#222222','#aaaaaa'],angle:160},
-
-  // LIGHT TO DARK
-  {cat:'light',type:'linear',name:'White Dusk',colors:['#ffffff','#cccccc','#333333'],angle:135},
-  {cat:'light',type:'linear',name:'Fade Out',colors:['#f0f0f0','#888888','#000000'],angle:180},
-  {cat:'light',type:'linear',name:'Silver Drop',colors:['#e8e8e8','#999999','#111111'],angle:160},
-  {cat:'light',type:'radial',name:'Halo',colors:['#ffffff','#aaaaaa','#000000']},
-
-  // RAINBOW
-  {cat:'rainbow',type:'linear',name:'Full Spectrum',colors:['#ff0000','#ffaa00','#ffff00','#00ff00','#00aaff','#8800ff'],angle:90},
-  {cat:'rainbow',type:'linear',name:'Pastel Rainbow',colors:['#ffb3b3','#ffd9b3','#ffffb3','#b3ffb3','#b3d9ff','#d9b3ff'],angle:135},
-  {cat:'rainbow',type:'conic',name:'Color Wheel',colors:['#ff0000','#ff8800','#ffff00','#00ff00','#0088ff','#8800ff','#ff0000']},
-  {cat:'rainbow',type:'linear',name:'Dark Rainbow',colors:['#aa0000','#aa5500','#aaaa00','#00aa00','#0055aa','#5500aa'],angle:90},
-  {cat:'rainbow',type:'linear',name:'Neon Bow',colors:['#ff003c','#ff8800','#ffee00','#00ff88','#00d4ff','#ff00ff'],angle:120},
-
-  // ROBLOX
-  {cat:'roblox',type:'linear',name:'Brick Red',colors:['#cc0000','#ff3333','#ff8888'],angle:135},
-  {cat:'roblox',type:'linear',name:'Roblox Blue',colors:['#0055ff','#3388ff','#88bbff'],angle:135},
-  {cat:'roblox',type:'linear',name:'Noob Yellow',colors:['#ffcc00','#ffee44','#fff5aa'],angle:120},
-  {cat:'roblox',type:'radial',name:'Tycoon Green',colors:['#00aa44','#00dd66','#88ffaa']},
-  {cat:'roblox',type:'linear',name:'Studio Dark',colors:['#1a1a2a','#2a2a4a','#4a4aaa'],angle:160},
-  {cat:'roblox',type:'linear',name:'UGC Purple',colors:['#6600cc','#9933ff','#cc88ff'],angle:135},
-  {cat:'roblox',type:'linear',name:'Obby Red',colors:['#880000','#cc2200','#ff5500'],angle:120},
-  {cat:'roblox',type:'radial',name:'VIP Gold',colors:['#886600','#ccaa00','#ffdd44']},
-
-  // NEON
-  {cat:'neon',type:'linear',name:'Cyber Green',colors:['#001a0a','#00ff88','#88ffcc'],angle:135},
-  {cat:'neon',type:'linear',name:'Electric Blue',colors:['#000a1a','#00d4ff','#88eeff'],angle:135},
-  {cat:'neon',type:'linear',name:'Hot Pink',colors:['#1a000a','#ff2d78','#ff88bb'],angle:135},
-  {cat:'neon',type:'radial',name:'Neon Glow',colors:['#00ff88','#00d4ff','#001a0a']},
-  {cat:'neon',type:'linear',name:'UV Purple',colors:['#0a001a','#8800ff','#dd88ff'],angle:160},
-  {cat:'neon',type:'linear',name:'Toxic',colors:['#001a00','#00ff00','#aaffaa'],angle:120},
-  {cat:'neon',type:'linear',name:'Laser Red',colors:['#1a0000','#ff0033','#ff8888'],angle:135},
-
-  // PASTEL
-  {cat:'pastel',type:'linear',name:'Cotton Candy',colors:['#ffb3e6','#b3d9ff','#b3ffcc'],angle:135},
-  {cat:'pastel',type:'linear',name:'Baby Blue',colors:['#cce8ff','#b3d9ff','#99ccff'],angle:120},
-  {cat:'pastel',type:'radial',name:'Soft Rose',colors:['#ffd6e0','#ffb3c6','#ff99b3']},
-  {cat:'pastel',type:'linear',name:'Lavender',colors:['#e8d5ff','#d4b3ff','#c099ff'],angle:135},
-  {cat:'pastel',type:'linear',name:'Mint Cream',colors:['#d5ffe8','#b3ffd4','#99ffcc'],angle:90},
-  {cat:'pastel',type:'linear',name:'Peach',colors:['#ffe8d5','#ffd4b3','#ffbb99'],angle:160},
-
-  // FIRE
-  {cat:'fire',type:'linear',name:'Inferno',colors:['#1a0000','#ff3300','#ffaa00','#ffff00'],angle:180},
-  {cat:'fire',type:'radial',name:'Ember',colors:['#ffdd00','#ff6600','#cc0000']},
-  {cat:'fire',name:'Lava',type:'linear',colors:['#000000','#550000','#ff2200','#ff8800'],angle:135},
-  {cat:'fire',type:'linear',name:'Torch',colors:['#ff8800','#ff4400','#cc0000'],angle:160},
-
-  // OCEAN
-  {cat:'ocean',type:'linear',name:'Deep Sea',colors:['#000022','#001144','#0044aa','#0088ff'],angle:180},
-  {cat:'ocean',type:'radial',name:'Coral',colors:['#0088ff','#00aacc','#00ccaa']},
-  {cat:'ocean',type:'linear',name:'Tide',colors:['#001a33','#003366','#0099cc','#66ccff'],angle:135},
-  {cat:'ocean',type:'linear',name:'Foam',colors:['#0066aa','#44aadd','#aaddff','#ffffff'],angle:120},
-
-  // SUNSET
-  {cat:'sunset',type:'linear',name:'Golden Hour',colors:['#ff6600','#ffaa00','#ffdd44','#ffe888'],angle:160},
-  {cat:'sunset',type:'linear',name:'Dusk',colors:['#1a0022','#880044','#ff4466','#ffaa44'],angle:135},
-  {cat:'sunset',type:'linear',name:'Horizon',colors:['#000011','#330044','#ff2266','#ff8844','#ffcc44'],angle:160},
-  {cat:'sunset',type:'radial',name:'Flare',colors:['#ffcc00','#ff6600','#cc0044','#220022']},
+  {cat:"Smooth",type:"Linear",name:"Silk",colors:["#ffffff","#e0e0e0","#b0b0b0"],angle:135},
+  {cat:"Smooth",type:"Linear",name:"Ash",colors:["#2c2c2c","#6b6b6b","#c0c0c0"],angle:160},
+  {cat:"Smooth",type:"Radial",name:"Pearl",colors:["#f5f5f5","#cccccc","#888888"]},
+  {cat:"Smooth",type:"Linear",name:"Smoke",colors:["#0a0a0a","#3a3a3a","#888888"],angle:180},
+  {cat:"Smooth",type:"Linear",name:"Mist",colors:["#e8e8e8","#f5f5f5","#ffffff"],angle:90},
+  {cat:"Cartoon",type:"Linear",name:"Bubblegum",colors:["#ff6eb4","#ff9de2","#ffd6f5"],angle:135},
+  {cat:"Cartoon",type:"Linear",name:"Sky Pop",colors:["#00b4ff","#66d9ff","#ccf5ff"],angle:120},
+  {cat:"Cartoon",type:"Radial",name:"Sun Burst",colors:["#ffdd00","#ffaa00","#ff6600"]},
+  {cat:"Cartoon",type:"Linear",name:"Lime Punch",colors:["#00ff88","#88ff00","#ccff66"],angle:90},
+  {cat:"Cartoon",type:"Linear",name:"Candy",colors:["#ff4488","#ff88bb","#ffccdd"],angle:160},
+  {cat:"Cartoon",type:"Linear",name:"Blue Razz",colors:["#0044ff","#4488ff","#aaccff"],angle:135},
+  {cat:"Dark→Light",type:"Linear",name:"Night Fog",colors:["#000000","#1a1a2e","#4a4a8a"],angle:135},
+  {cat:"Dark→Light",type:"Linear",name:"Coal Rise",colors:["#0a0a0a","#2d2d2d","#888888"],angle:180},
+  {cat:"Dark→Light",type:"Linear",name:"Abyss",colors:["#000000","#001122","#0044aa"],angle:120},
+  {cat:"Dark→Light",type:"Linear",name:"Shadow",colors:["#050505","#222222","#aaaaaa"],angle:160},
+  {cat:"Dark→Light",type:"Radial",name:"Black Hole",colors:["#000000","#111111","#333333"]},
+  {cat:"Light→Dark",type:"Linear",name:"White Dusk",colors:["#ffffff","#cccccc","#333333"],angle:135},
+  {cat:"Light→Dark",type:"Linear",name:"Fade Out",colors:["#f0f0f0","#888888","#000000"],angle:180},
+  {cat:"Light→Dark",type:"Linear",name:"Silver Drop",colors:["#e8e8e8","#999999","#111111"],angle:160},
+  {cat:"Light→Dark",type:"Radial",name:"Halo",colors:["#ffffff","#aaaaaa","#000000"]},
+  {cat:"Rainbow",type:"Linear",name:"Full Spectrum",colors:["#ff0000","#ffaa00","#ffff00","#00ff00","#00aaff","#8800ff"],angle:90},
+  {cat:"Rainbow",type:"Linear",name:"Pastel Bow",colors:["#ffb3b3","#ffd9b3","#ffffb3","#b3ffb3","#b3d9ff","#d9b3ff"],angle:135},
+  {cat:"Rainbow",type:"Linear",name:"Neon Bow",colors:["#ff003c","#ff8800","#ffee00","#00ff88","#00d4ff","#ff00ff"],angle:120},
+  {cat:"Rainbow",type:"Linear",name:"Dark Bow",colors:["#aa0000","#aa5500","#aaaa00","#00aa00","#0055aa","#5500aa"],angle:90},
+  {cat:"Roblox",type:"Linear",name:"Brick Red",colors:["#cc0000","#ff3333","#ff8888"],angle:135},
+  {cat:"Roblox",type:"Linear",name:"Roblox Blue",colors:["#0055ff","#3388ff","#88bbff"],angle:135},
+  {cat:"Roblox",type:"Linear",name:"Noob Yellow",colors:["#ffcc00","#ffee44","#fff5aa"],angle:120},
+  {cat:"Roblox",type:"Radial",name:"Tycoon Green",colors:["#00aa44","#00dd66","#88ffaa"]},
+  {cat:"Roblox",type:"Linear",name:"Studio Dark",colors:["#1a1a2a","#2a2a4a","#4a4aaa"],angle:160},
+  {cat:"Roblox",type:"Linear",name:"UGC Purple",colors:["#6600cc","#9933ff","#cc88ff"],angle:135},
+  {cat:"Roblox",type:"Linear",name:"Obby Red",colors:["#880000","#cc2200","#ff5500"],angle:120},
+  {cat:"Roblox",type:"Radial",name:"VIP Gold",colors:["#886600","#ccaa00","#ffdd44"]},
+  {cat:"Neon",type:"Linear",name:"Cyber Green",colors:["#001a0a","#00ff88","#88ffcc"],angle:135},
+  {cat:"Neon",type:"Linear",name:"Electric Blue",colors:["#000a1a","#00d4ff","#88eeff"],angle:135},
+  {cat:"Neon",type:"Linear",name:"Hot Pink",colors:["#1a000a","#ff2d78","#ff88bb"],angle:135},
+  {cat:"Neon",type:"Radial",name:"Neon Glow",colors:["#00ff88","#00d4ff","#001a0a"]},
+  {cat:"Neon",type:"Linear",name:"UV Purple",colors:["#0a001a","#8800ff","#dd88ff"],angle:160},
+  {cat:"Neon",type:"Linear",name:"Toxic",colors:["#001a00","#00ff00","#aaffaa"],angle:120},
+  {cat:"Pastel",type:"Linear",name:"Cotton Candy",colors:["#ffb3e6","#b3d9ff","#b3ffcc"],angle:135},
+  {cat:"Pastel",type:"Linear",name:"Baby Blue",colors:["#cce8ff","#b3d9ff","#99ccff"],angle:120},
+  {cat:"Pastel",type:"Radial",name:"Soft Rose",colors:["#ffd6e0","#ffb3c6","#ff99b3"]},
+  {cat:"Pastel",type:"Linear",name:"Lavender",colors:["#e8d5ff","#d4b3ff","#c099ff"],angle:135},
+  {cat:"Pastel",type:"Linear",name:"Mint",colors:["#d5ffe8","#b3ffd4","#99ffcc"],angle:90},
+  {cat:"Fire",type:"Linear",name:"Inferno",colors:["#1a0000","#ff3300","#ffaa00","#ffff00"],angle:180},
+  {cat:"Fire",type:"Radial",name:"Ember",colors:["#ffdd00","#ff6600","#cc0000"]},
+  {cat:"Fire",type:"Linear",name:"Lava",colors:["#000000","#550000","#ff2200","#ff8800"],angle:135},
+  {cat:"Ocean",type:"Linear",name:"Deep Sea",colors:["#000022","#001144","#0044aa","#0088ff"],angle:180},
+  {cat:"Ocean",type:"Radial",name:"Coral",colors:["#0088ff","#00aacc","#00ccaa"]},
+  {cat:"Ocean",type:"Linear",name:"Tide",colors:["#001a33","#003366","#0099cc","#66ccff"],angle:135},
+  {cat:"Sunset",type:"Linear",name:"Golden Hour",colors:["#ff6600","#ffaa00","#ffdd44"],angle:160},
+  {cat:"Sunset",type:"Linear",name:"Dusk",colors:["#1a0022","#880044","#ff4466","#ffaa44"],angle:135},
+  {cat:"Sunset",type:"Linear",name:"Horizon",colors:["#000011","#330044","#ff2266","#ff8844","#ffcc44"],angle:160},
 ];
 
-// STROKE+FILL PAIRS
 const SF_PAIRS = [
-  {name:'Neon Circuit',fill:['#000a0a','#001a0a','#003322'],stroke:['#00ff88','#00ffcc'],category:'neon'},
-  {name:'Cyber Blue',fill:['#000a1a','#001133','#002255'],stroke:['#00d4ff','#88eeff'],category:'neon'},
-  {name:'Hot Signal',fill:['#1a0008','#330011','#550022'],stroke:['#ff2d78','#ff88bb'],category:'neon'},
-  {name:'Roblox Classic',fill:['#cc0000','#ff3333'],stroke:['#ffffff','#ffeeee'],category:'roblox'},
-  {name:'Studio UI',fill:['#1a1a2a','#2a2a4a'],stroke:['#6666ff','#aaaaff'],category:'roblox'},
-  {name:'Cartoon Pop',fill:['#ff6eb4','#ff9de2'],stroke:['#ffffff','#ffe0f5'],category:'cartoon'},
-  {name:'Sky Toon',fill:['#00b4ff','#66d9ff'],stroke:['#ffffff','#e0f5ff'],category:'cartoon'},
-  {name:'Dark Smoke',fill:['#0a0a0a','#1a1a1a'],stroke:['#888888','#cccccc'],category:'dark'},
-  {name:'Shadow Rise',fill:['#000000','#111111'],stroke:['#444444','#999999'],category:'dark'},
-  {name:'Pearl Dusk',fill:['#f0f0f0','#cccccc'],stroke:['#333333','#111111'],category:'light'},
-  {name:'Fire Edge',fill:['#1a0000','#330000'],stroke:['#ff4400','#ffaa00'],category:'fire'},
-  {name:'Ocean Depth',fill:['#000022','#001144'],stroke:['#0088ff','#44ccff'],category:'ocean'},
-  {name:'Sunset Glow',fill:['#1a0011','#330022'],stroke:['#ff6600','#ffcc44'],category:'sunset'},
-  {name:'Rainbow Pop',fill:['#1a001a','#000a1a'],stroke:['#ff2d78','#00d4ff'],category:'rainbow'},
-  {name:'Pastel Dream',fill:['#fff0f8','#f0f0ff'],stroke:['#ff99cc','#9999ff'],category:'pastel'},
-  {name:'Gold VIP',fill:['#1a1100','#332200'],stroke:['#ffdd00','#ffaa44'],category:'roblox'},
+  {name:"Neon Circuit",fill:["#001a0a","#003322"],stroke:["#00ff88","#00ffcc"],cat:"Neon"},
+  {name:"Cyber Blue",fill:["#000a1a","#002255"],stroke:["#00d4ff","#88eeff"],cat:"Neon"},
+  {name:"Hot Signal",fill:["#1a0008","#550022"],stroke:["#ff2d78","#ff88bb"],cat:"Neon"},
+  {name:"Roblox Classic",fill:["#cc0000","#ff3333"],stroke:["#ffffff","#ffeeee"],cat:"Roblox"},
+  {name:"Studio UI",fill:["#1a1a2a","#2a2a4a"],stroke:["#6666ff","#aaaaff"],cat:"Roblox"},
+  {name:"VIP Gold",fill:["#1a1100","#332200"],stroke:["#ffdd00","#ffaa44"],cat:"Roblox"},
+  {name:"Cartoon Pop",fill:["#ff6eb4","#ff9de2"],stroke:["#ffffff","#ffe0f5"],cat:"Cartoon"},
+  {name:"Sky Toon",fill:["#00b4ff","#66d9ff"],stroke:["#ffffff","#e0f5ff"],cat:"Cartoon"},
+  {name:"Dark Smoke",fill:["#0a0a0a","#1a1a1a"],stroke:["#888888","#cccccc"],cat:"Dark"},
+  {name:"Pearl Dusk",fill:["#f0f0f0","#cccccc"],stroke:["#333333","#111111"],cat:"Light"},
+  {name:"Fire Edge",fill:["#1a0000","#330000"],stroke:["#ff4400","#ffaa00"],cat:"Fire"},
+  {name:"Ocean Depth",fill:["#000022","#001144"],stroke:["#0088ff","#44ccff"],cat:"Ocean"},
+  {name:"Sunset Glow",fill:["#1a0011","#330022"],stroke:["#ff6600","#ffcc44"],cat:"Sunset"},
+  {name:"Rainbow Pop",fill:["#1a001a","#000a1a"],stroke:["#ff2d78","#00d4ff"],cat:"Rainbow"},
+  {name:"Pastel Dream",fill:["#fff0f8","#f0f0ff"],stroke:["#ff99cc","#9999ff"],cat:"Pastel"},
+  {name:"UV Edge",fill:["#0a001a","#1a0033"],stroke:["#8800ff","#dd88ff"],cat:"Neon"},
 ];
-
-// ══════════ BUILD GRADIENT CSS ══════════
 
 function buildCSS(g) {
-  const c = g.colors.join(', ');
-  if (g.type === 'radial') return `radial-gradient(circle, ${c})`;
-  if (g.type === 'conic') return `conic-gradient(${c})`;
-  const a = g.angle || 135;
-  return `linear-gradient(${a}deg, ${c})`;
+  const c = g.colors.join(", ");
+  if (g.type === "Radial") return `radial-gradient(circle, ${c})`;
+  return `linear-gradient(${g.angle || 135}deg, ${c})`;
 }
 
-function buildLinear(colors, angle=135) {
-  return `linear-gradient(${angle}deg, ${colors.join(', ')})`;
+function buildLinear(colors, angle = 135) {
+  return `linear-gradient(${angle}deg, ${colors.join(", ")})`;
 }
 
-// ══════════ CATEGORIES ══════════
-
-function buildCats() {
-  const el = document.getElementById('cats');
-  CATEGORIES.forEach(c => {
-    const b = document.createElement('button');
-    b.className = 'cat-btn' + (c.id === activeCat ? ' act' : '');
-    b.textContent = c.label;
-    b.onclick = () => {
-      activeCat = c.id;
-      document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('act'));
-      b.classList.add('act');
-      renderGrid();
-    };
-    el.appendChild(b);
-  });
-
-  el.appendChild(Object.assign(document.createElement('div'), {className:'sep'}));
-
-  const gb = document.createElement('button');
-  gb.className = 'gen-btn';
-  gb.textContent = '⚡ Random';
-  gb.onclick = generateRandom;
-  el.appendChild(gb);
-}
-
-function buildTypes() {
-  const el = document.getElementById('types');
-  TYPES.forEach(t => {
-    const b = document.createElement('button');
-    b.className = 'type-btn' + (t === activeType ? ' act' : '');
-    b.textContent = t;
-    b.onclick = () => {
-      activeType = t;
-      document.querySelectorAll('.type-btn').forEach(x => x.classList.remove('act'));
-      b.classList.add('act');
-      renderGrid();
-    };
-    el.appendChild(b);
-  });
-}
-
-// ══════════ MAIN GRID ══════════
-
-function renderGrid() {
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
-
-  let filtered = GRADIENTS;
-  if (activeCat !== 'all') filtered = filtered.filter(g => g.cat === activeCat);
-  if (activeType !== 'All Types') {
-    const t = activeType.toLowerCase();
-    if (t === 'stroke' || t === 'fill') {
-      // show sf pairs instead
-      renderSFGrid(t);
-      grid.style.display = 'none';
-      return;
-    }
-    filtered = filtered.filter(g => g.type === t);
-  }
-  grid.style.display = 'grid';
-
-  filtered.forEach(g => {
-    const css = buildCSS(g);
-    const card = document.createElement('div');
-    card.className = 'card';
-
-    const preview = document.createElement('div');
-    preview.className = 'card-preview';
-    preview.style.background = css;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'card-overlay';
-
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'copy-btn-small';
-    copyBtn.textContent = 'Copy CSS';
-    copyBtn.onclick = (e) => { e.stopPropagation(); copyText(css, 'CSS Copied!'); };
-
-    overlay.appendChild(copyBtn);
-    preview.appendChild(overlay);
-
-    const info = document.createElement('div');
-    info.className = 'card-info';
-
-    const typeEl = document.createElement('div');
-    typeEl.className = 'card-type';
-    typeEl.textContent = g.type.toUpperCase() + ' · ' + g.name;
-    info.appendChild(typeEl);
-
-    const colors = document.createElement('div');
-    colors.className = 'card-colors';
-
-    g.colors.forEach(hex => {
-      const sw = document.createElement('div');
-      sw.className = 'color-swatch';
-      sw.title = 'Click to copy ' + hex;
-      sw.onclick = (e) => { e.stopPropagation(); copyText(hex, hex + ' Copied!'); };
-
-      const dot = document.createElement('div');
-      dot.className = 'swatch-dot';
-      dot.style.background = hex;
-      dot.style.border = hex.toLowerCase() === '#ffffff' || hex.toLowerCase() === '#fff' ? '1px solid #333' : 'none';
-
-      const label = document.createElement('span');
-      label.className = 'swatch-hex';
-      label.textContent = hex;
-
-      sw.appendChild(dot);
-      sw.appendChild(label);
-      colors.appendChild(sw);
-    });
-
-    info.appendChild(colors);
-    card.appendChild(preview);
-    card.appendChild(info);
-    card.onclick = () => copyText(css, 'Gradient CSS Copied!');
-    grid.appendChild(card);
-  });
-
-  if (filtered.length === 0) {
-    grid.innerHTML = '<div style="padding:60px;text-align:center;color:var(--tx3);font-size:.8rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;background:var(--bg)">No gradients found</div>';
-  }
-}
-
-// ══════════ SF GRID ══════════
-
-function renderSFGrid(type) {
-  buildSFGrid();
-  document.getElementById('sfGrid').scrollIntoView({behavior:'smooth'});
-}
-
-function buildSFGrid() {
-  const grid = document.getElementById('sfGrid');
-  grid.innerHTML = '';
-
-  SF_PAIRS.forEach(pair => {
-    const card = document.createElement('div');
-    card.className = 'sf-card';
-
-    const preview = document.createElement('div');
-    preview.className = 'sf-preview';
-
-    const fillBox = document.createElement('div');
-    fillBox.className = 'sf-fill-box';
-    fillBox.style.background = buildLinear(pair.fill);
-    fillBox.title = 'Fill gradient';
-
-    const strokeBox = document.createElement('div');
-    strokeBox.className = 'sf-stroke-box';
-    strokeBox.style.cssText = `
-      background: var(--bg3);
-      border: 4px solid transparent;
-      background-clip: padding-box;
-      border-image: ${buildLinear(pair.stroke)} 1;
-    `;
-
-    const strokeVisual = document.createElement('div');
-    strokeVisual.style.cssText = `width:100%;height:100%;background:${buildLinear(pair.stroke)};border-radius:2px`;
-    strokeBox.style.background = 'none';
-    strokeBox.style.border = 'none';
-    strokeBox.appendChild(strokeVisual);
-
-    const labels = document.createElement('div');
-    labels.innerHTML = `
-      <div>
-        <div class="sf-label">Fill</div>
-        <div class="sf-colors">${pair.fill.map(c=>`<div class="color-swatch" onclick="copyText('${c}','${c} Copied!')"><div class="swatch-dot" style="background:${c}"></div><span class="swatch-hex">${c}</span></div>`).join('')}</div>
-      </div>
-      <div style="margin-top:8px">
-        <div class="sf-label">Stroke</div>
-        <div class="sf-colors">${pair.stroke.map(c=>`<div class="color-swatch" onclick="copyText('${c}','${c} Copied!')"><div class="swatch-dot" style="background:${c}"></div><span class="swatch-hex">${c}</span></div>`).join('')}</div>
-      </div>
-    `;
-
-    preview.appendChild(fillBox);
-    preview.appendChild(strokeBox);
-    preview.appendChild(labels);
-
-    const copyRow = document.createElement('div');
-    copyRow.className = 'sf-copy-row';
-
-    const fillCSS = buildLinear(pair.fill);
-    const strokeCSS = buildLinear(pair.stroke);
-
-    const copyFill = document.createElement('button');
-    copyFill.className = 'sf-copy-btn';
-    copyFill.textContent = 'Copy Fill';
-    copyFill.onclick = (e) => { e.stopPropagation(); copyText(fillCSS, 'Fill CSS Copied!'); };
-
-    const copyStroke = document.createElement('button');
-    copyStroke.className = 'sf-copy-btn';
-    copyStroke.textContent = 'Copy Stroke';
-    copyStroke.onclick = (e) => { e.stopPropagation(); copyText(strokeCSS, 'Stroke CSS Copied!'); };
-
-    copyRow.appendChild(copyFill);
-    copyRow.appendChild(copyStroke);
-
-    const title = document.createElement('div');
-    title.style.cssText = 'font-size:.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);margin-bottom:12px';
-    title.textContent = pair.name + ' · ' + pair.category.toUpperCase();
-
-    card.appendChild(title);
-    card.appendChild(preview);
-    card.appendChild(copyRow);
-    grid.appendChild(card);
-  });
-}
-
-// ══════════ RANDOM GENERATOR ══════════
-
-const HARMONY_PALETTES = [
-  // neon on dark
-  () => { const hue=Math.random()*360; return { fill: [hsl(hue,100,2), hsl(hue,80,8), hsl(hue,60,16)], stroke: [hsl(hue,100,55), hsl((hue+30)%360,100,65)] }; },
-  // pastel
-  () => { const hue=Math.random()*360; return { fill: [hsl(hue,40,90), hsl((hue+60)%360,40,88)], stroke: [hsl(hue,50,60), hsl((hue+30)%360,50,55)] }; },
-  // dark mono
-  () => { const l=Math.floor(Math.random()*30+5); return { fill: [hsl(0,0,l), hsl(0,0,l+10), hsl(0,0,l+20)], stroke: [hsl(0,0,l+40), hsl(0,0,l+60)] }; },
-  // vibrant
-  () => { const hue=Math.random()*360; return { fill: [hsl(hue,90,15), hsl(hue,85,25)], stroke: [hsl(hue,100,55), hsl((hue+180)%360,100,55)] }; },
-  // fire
-  () => ({ fill: [hsl(0,100,3), hsl(10,100,8), hsl(20,100,12)], stroke: [hsl(25,100,55), hsl(45,100,60)] }),
-  // ocean
-  () => ({ fill: [hsl(220,100,3), hsl(210,100,8), hsl(200,100,14)], stroke: [hsl(195,100,55), hsl(180,100,60)] }),
-  // sunset
-  () => ({ fill: [hsl(280,80,8), hsl(300,60,5)], stroke: [hsl(20,100,60), hsl(40,100,65)] }),
-  // roblox
-  () => { const pairs=[[0,100,40,0,100,55],[220,100,40,200,80,60],[45,100,40,45,100,60]]; const p=pairs[Math.floor(Math.random()*pairs.length)]; return {fill:[hsl(p[0],p[1],p[2])],stroke:[hsl(p[3],p[4],p[5])]}; },
-];
-
-function hsl(h,s,l){ return `hsl(${Math.round(h)},${Math.round(s)}%,${Math.round(l)})` }
-
-function hslToHex(h,s,l){
-  s/=100; l/=100;
-  const a=s*Math.min(l,1-l);
-  const f=n=>{const k=(n+h/30)%12;const c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,'0')};
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => { const k = (n + h / 30) % 12; const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); return Math.round(255 * c).toString(16).padStart(2, "0"); };
   return `#${f(0)}${f(8)}${f(4)}`;
 }
 
-function parseHSL(str){
-  const m=str.match(/hsl\((\d+),(\d+)%,(\d+)%\)/);
-  if(m) return hslToHex(+m[1],+m[2],+m[3]);
-  return str;
+const HARMONY = [
+  () => { const h = Math.random() * 360; return { fill: [hslToHex(h,100,3), hslToHex(h,80,10), hslToHex(h,60,18)], stroke: [hslToHex(h,100,55), hslToHex((h+30)%360,100,65)] }; },
+  () => { const h = Math.random() * 360; return { fill: [hslToHex(h,40,88), hslToHex((h+60)%360,40,85)], stroke: [hslToHex(h,50,60), hslToHex((h+30)%360,50,55)] }; },
+  () => { const l = Math.floor(Math.random()*25+5); return { fill: [hslToHex(0,0,l), hslToHex(0,0,l+12), hslToHex(0,0,l+24)], stroke: [hslToHex(0,0,l+40), hslToHex(0,0,l+60)] }; },
+  () => { const h = Math.random() * 360; return { fill: [hslToHex(h,90,8), hslToHex(h,85,18)], stroke: [hslToHex(h,100,55), hslToHex((h+180)%360,100,55)] }; },
+  () => ({ fill: [hslToHex(0,100,3), hslToHex(15,100,10)], stroke: [hslToHex(25,100,55), hslToHex(45,100,60)] }),
+  () => ({ fill: [hslToHex(220,100,3), hslToHex(200,100,10)], stroke: [hslToHex(195,100,55), hslToHex(180,100,60)] }),
+  () => ({ fill: [hslToHex(280,80,5), hslToHex(300,60,8)], stroke: [hslToHex(20,100,60), hslToHex(40,100,65)] }),
+];
+
+export default function App() {
+  const [activeCat, setActiveCat] = useState("All");
+  const [activeTab, setActiveTab] = useState("gradients");
+  const [toast, setToast] = useState(null);
+  const [genData, setGenData] = useState(null);
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1800);
+  }, []);
+
+  const copy = useCallback((text, msg) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    showToast(msg || "Copied!");
+  }, [showToast]);
+
+  const generateRandom = useCallback(() => {
+    const p = HARMONY[Math.floor(Math.random() * HARMONY.length)]();
+    const angle = Math.floor(Math.random() * 360);
+    setGenData({ fill: p.fill, stroke: p.stroke, angle });
+  }, []);
+
+  const filtered = GRADIENTS.filter(g => activeCat === "All" || g.cat === activeCat);
+
+  return (
+    <div style={{ fontFamily: "'Inter', sans-serif", background: "#080808", color: "#f0f0f0", minHeight: "100vh" }}>
+      {/* NAV */}
+      <nav style={{ position: "sticky", top: 0, zIndex: 100, padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(8,8,8,0.95)", borderBottom: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(20px)" }}>
+        <div style={{ fontWeight: 900, fontSize: "1rem", letterSpacing: 3, textTransform: "uppercase" }}>
+          Gradients<sup style={{ fontSize: ".45rem", color: "#00ff88", verticalAlign: "super" }}>®</sup>
+        </div>
+        <div style={{ fontSize: ".65rem", fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "#444" }}>by M1SLY</div>
+      </nav>
+
+      {/* HERO */}
+      <div style={{ textAlign: "center", padding: "48px 32px 28px" }}>
+        <h1 style={{ fontSize: "clamp(2rem,5vw,3rem)", fontWeight: 900, letterSpacing: -2, lineHeight: 1, marginBottom: 8 }}>
+          Pick a{" "}
+          <span style={{ background: "linear-gradient(135deg,#00ff88,#00d4ff,#ff2d78)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            Gradient.
+          </span>
+        </h1>
+        <p style={{ fontSize: ".82rem", color: "#666", fontWeight: 300 }}>Click any color swatch to copy hex — click card to copy CSS</p>
+      </div>
+
+      {/* TABS */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 4, padding: "0 32px 20px", flexWrap: "wrap" }}>
+        {["gradients", "stroke & fill", "generator"].map(t => (
+          <button key={t} onClick={() => setActiveTab(t)} style={{ padding: "6px 16px", background: activeTab === t ? "#fff" : "transparent", color: activeTab === t ? "#000" : "#555", border: `1px solid ${activeTab === t ? "#fff" : "rgba(255,255,255,0.1)"}`, borderRadius: 2, fontFamily: "Inter", fontSize: ".65rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", transition: "all .2s" }}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* CATEGORY FILTER — gradients only */}
+      {activeTab === "gradients" && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 5, padding: "0 32px 24px", flexWrap: "wrap" }}>
+          {CATS.map(c => (
+            <button key={c} onClick={() => setActiveCat(c)} style={{ padding: "5px 13px", background: activeCat === c ? "#00ff88" : "transparent", color: activeCat === c ? "#000" : "#555", border: `1px solid ${activeCat === c ? "#00ff88" : "rgba(255,255,255,0.1)"}`, borderRadius: 2, fontFamily: "Inter", fontSize: ".62rem", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer", transition: "all .2s" }}>
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* GRADIENTS TAB */}
+      {activeTab === "gradients" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.05)", margin: "0 32px 48px" }}>
+          {filtered.map((g, i) => {
+            const css = buildCSS(g);
+            return (
+              <div key={i} onClick={() => copy(css, "CSS Copied!")} style={{ background: "#0f0f0f", cursor: "pointer", transition: "all .2s", position: "relative" }}
+                onMouseEnter={e => e.currentTarget.style.background = "#161616"}
+                onMouseLeave={e => e.currentTarget.style.background = "#0f0f0f"}>
+                <div style={{ height: 110, background: css, position: "relative" }}>
+                  <div style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: ".55rem", fontWeight: 700, letterSpacing: 1.5, padding: "3px 7px", textTransform: "uppercase", borderRadius: 2 }}>
+                    {g.type}
+                  </div>
+                </div>
+                <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ fontSize: ".58rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#444", marginBottom: 6 }}>{g.name}</div>
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                    {g.colors.map((hex, j) => (
+                      <div key={j} onClick={e => { e.stopPropagation(); copy(hex, hex + " Copied!"); }} style={{ display: "flex", alignItems: "center", gap: 3, cursor: "pointer" }} title={hex}>
+                        <div style={{ width: 9, height: 9, borderRadius: "50%", background: hex, border: hex === "#ffffff" || hex === "#fff" ? "1px solid #333" : "none", flexShrink: 0 }} />
+                        <span style={{ fontSize: ".58rem", fontWeight: 600, color: "#555", fontFamily: "monospace" }}>{hex}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* STROKE & FILL TAB */}
+      {activeTab === "stroke & fill" && (
+        <div style={{ margin: "0 32px 48px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.05)" }}>
+            {SF_PAIRS.map((pair, i) => {
+              const fillCSS = buildLinear(pair.fill);
+              const strokeCSS = buildLinear(pair.stroke);
+              return (
+                <div key={i} style={{ background: "#0f0f0f", padding: 18, transition: "all .2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#141414"}
+                  onMouseLeave={e => e.currentTarget.style.background = "#0f0f0f"}>
+                  <div style={{ fontSize: ".58rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#00ff88", marginBottom: 12 }}>{pair.name} · {pair.cat}</div>
+                  <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+                    <div>
+                      <div style={{ fontSize: ".52rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#444", marginBottom: 4 }}>Fill</div>
+                      <div style={{ width: 60, height: 52, background: fillCSS, borderRadius: 2 }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: ".52rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#444", marginBottom: 4 }}>Stroke</div>
+                      <div style={{ width: 60, height: 52, background: strokeCSS, borderRadius: 2 }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ marginBottom: 6 }}>
+                        {pair.fill.map((hex, j) => (
+                          <div key={j} onClick={() => copy(hex, hex + " Copied!")} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", marginBottom: 3 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: hex, flexShrink: 0 }} />
+                            <span style={{ fontSize: ".58rem", color: "#555", fontFamily: "monospace" }}>{hex}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div>
+                        {pair.stroke.map((hex, j) => (
+                          <div key={j} onClick={() => copy(hex, hex + " Copied!")} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", marginBottom: 3 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: hex, flexShrink: 0 }} />
+                            <span style={{ fontSize: ".58rem", color: "#555", fontFamily: "monospace" }}>{hex}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 5 }}>
+                    <button onClick={() => copy(fillCSS, "Fill CSS Copied!")} style={{ flex: 1, padding: "7px 0", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#666", fontFamily: "Inter", fontSize: ".6rem", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>Copy Fill</button>
+                    <button onClick={() => copy(strokeCSS, "Stroke CSS Copied!")} style={{ flex: 1, padding: "7px 0", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#666", fontFamily: "Inter", fontSize: ".6rem", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer" }}>Copy Stroke</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* GENERATOR TAB */}
+      {activeTab === "generator" && (
+        <div style={{ margin: "0 32px 48px", maxWidth: 600, marginLeft: "auto", marginRight: "auto" }}>
+          <div style={{ background: "#0f0f0f", border: "1px solid rgba(255,255,255,0.07)", padding: 28 }}>
+            <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: ".58rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#444", marginBottom: 6 }}>Fill</div>
+                <div style={{ height: 80, background: genData ? buildLinear(genData.fill, genData.angle) : "#1a1a1a", borderRadius: 3, transition: "background .4s" }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: ".58rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#444", marginBottom: 6 }}>Stroke</div>
+                <div style={{ height: 80, background: genData ? buildLinear(genData.stroke, (genData.angle + 90) % 360) : "#1a1a1a", borderRadius: 3, transition: "background .4s" }} />
+              </div>
+            </div>
+
+            {genData && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: ".58rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#444", marginBottom: 6 }}>Fill Colors</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                  {genData.fill.map((hex, i) => (
+                    <div key={i} onClick={() => copy(hex, hex + " Copied!")} style={{ padding: "4px 10px", border: "1px solid rgba(255,255,255,0.1)", color: "#888", fontFamily: "monospace", fontSize: ".7rem", cursor: "pointer", borderRadius: 2, display: "flex", alignItems: "center", gap: 5 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: hex }} />
+                      {hex}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontSize: ".58rem", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#444", marginBottom: 6 }}>Stroke Colors</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {genData.stroke.map((hex, i) => (
+                    <div key={i} onClick={() => copy(hex, hex + " Copied!")} style={{ padding: "4px 10px", border: "1px solid rgba(255,255,255,0.1)", color: "#888", fontFamily: "monospace", fontSize: ".7rem", cursor: "pointer", borderRadius: 2, display: "flex", alignItems: "center", gap: 5 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: hex }} />
+                      {hex}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <button onClick={generateRandom} style={{ padding: "10px 20px", background: "#00ff88", color: "#000", border: "none", fontFamily: "Inter", fontSize: ".7rem", fontWeight: 900, letterSpacing: 2, textTransform: "uppercase", cursor: "pointer", borderRadius: 2 }}>⚡ Generate</button>
+              {genData && <>
+                <button onClick={() => copy(buildLinear(genData.fill, genData.angle), "Fill CSS Copied!")} style={{ padding: "10px 16px", background: "transparent", color: "#666", border: "1px solid rgba(255,255,255,0.1)", fontFamily: "Inter", fontSize: ".65rem", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer", borderRadius: 2 }}>Copy Fill</button>
+                <button onClick={() => copy(buildLinear(genData.stroke, (genData.angle + 90) % 360), "Stroke CSS Copied!")} style={{ padding: "10px 16px", background: "transparent", color: "#666", border: "1px solid rgba(255,255,255,0.1)", fontFamily: "Inter", fontSize: ".65rem", fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", cursor: "pointer", borderRadius: 2 }}>Copy Stroke</button>
+              </>}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST */}
+      {toast && (
+        <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#fff", color: "#000", padding: "10px 20px", borderRadius: 2, fontSize: ".72rem", fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", zIndex: 9999, whiteSpace: "nowrap", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+          ✓ {toast}
+        </div>
+      )}
+
+      <footer style={{ textAlign: "center", padding: 24, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <p style={{ fontSize: ".6rem", fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "#333" }}>
+          Gradients — <span style={{ color: "#00ff88" }}>by M1SLY®</span>
+        </p>
+      </footer>
+    </div>
+  );
 }
-
-function generateRandom(){
-  const idx = Math.floor(Math.random()*HARMONY_PALETTES.length);
-  const palette = HARMONY_PALETTES[idx]();
-  const angle = Math.floor(Math.random()*360);
-
-  genFillData = { colors: palette.fill, angle };
-  genStrokeData = { colors: palette.stroke, angle: (angle+90)%360 };
-
-  const fillCSS = buildLinear(palette.fill, angle);
-  const strokeCSS = buildLinear(palette.stroke, (angle+90)%360);
-
-  document.getElementById('genFill').style.background = fillCSS;
-  document.getElementById('genStroke').style.background = strokeCSS;
-
-  document.getElementById('genFillHex').innerHTML = palette.fill.map(c=>{
-    const hex = parseHSL(c);
-    return `<div class="gen-hex" onclick="copyText('${hex}','${hex} Copied!')" title="Click to copy">${hex}</div>`;
-  }).join('');
-
-  document.getElementById('genStrokeHex').innerHTML = palette.stroke.map(c=>{
-    const hex = parseHSL(c);
-    return `<div class="gen-hex" onclick="copyText('${hex}','${hex} Copied!')" title="Click to copy">${hex}</div>`;
-  }).join('');
-}
-
-function copyGenFill(){
-  if(!genFillData) return;
-  copyText(buildLinear(genFillData.colors, genFillData.angle), 'Fill CSS Copied!');
-}
-function copyGenStroke(){
-  if(!genStrokeData) return;
-  copyText(buildLinear(genStrokeData.colors, genStrokeData.angle), 'Stroke CSS Copied!');
-}
-
-// ══════════ COPY ══════════
-
-function copyText(text, msg){
-  navigator.clipboard.writeText(text).then(()=>toast(msg)).catch(()=>{
-    const t=document.createElement('textarea');
-    t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);
-    toast(msg);
-  });
-}
-
-let toastTimer;
-function toast(msg){
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>el.classList.remove('show'), 1800);
-}
-
-// ══════════ INIT ══════════
-
-buildCats();
-buildTypes();
-renderGrid();
-buildSFGrid();
-generateRandom();
-</script>
-</body>
-</html>
