@@ -3,906 +3,787 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Emsly Gradients — Roblox UI Color Tool</title>
+<title>Emsly Gradients — Pro Gradient Tool</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-/* ═══════════════════════════════════════
-   EMSLY GRADIENTS — CLEAN MONOCHROME UI
-   ═══════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#09090b;--bg2:#111113;--bg3:#18181b;--bg4:#1e1e22;
-  --border:#27272a;--border2:#3f3f46;
-  --text:#fafafa;--text2:#a1a1aa;--text3:#71717a;--text4:#52525b;
-  --white:#ffffff;--black:#000000;
-  --accent:#e4e4e7;
-  --r:8px;--r2:12px;--r3:16px;
-  --tr:all .2s ease;
+--bg:#09090b;--bg2:#111113;--bg3:#18181b;--bg4:#1f1f23;--bg5:#27272a;
+--border:#27272a;--border2:#3f3f46;--border3:#52525b;
+--text:#fafafa;--text2:#a1a1aa;--text3:#71717a;--text4:#52525b;
+--white:#fff;--r:8px;--r2:12px;--r3:16px;--r4:20px;
+--tr:all .2s ease;--trs:all .35s cubic-bezier(.4,0,.2,1)
 }
 html{scroll-behavior:smooth}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
-  min-height:100vh;overflow-x:hidden;line-height:1.5}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
-::selection{background:rgba(255,255,255,.15)}
+::selection{background:rgba(255,255,255,.12)}
+button{font-family:inherit}
 
 /* ═══ HEADER ═══ */
-.header{padding:28px 24px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;background:rgba(9,9,11,.85);backdrop-filter:blur(20px)}
-.logo{display:flex;align-items:center;gap:12px}
-.logo-mark{width:32px;height:32px;border-radius:8px;
-  background:linear-gradient(135deg,#fff 0%,#999 100%);display:flex;
-  align-items:center;justify-content:center;font-size:14px;color:#000;font-weight:900}
-.logo h1{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
-.logo h1 span{color:var(--text3);font-weight:500}
-.header-nav{display:flex;gap:2px;background:var(--bg3);border-radius:var(--r2);padding:3px}
-.header-nav button{padding:8px 16px;border:none;background:transparent;color:var(--text3);
-  font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;border-radius:var(--r);
-  transition:var(--tr);white-space:nowrap}
-.header-nav button:hover{color:var(--text2)}
-.header-nav button.on{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.hdr{position:sticky;top:0;z-index:100;background:rgba(9,9,11,.88);backdrop-filter:blur(24px);
+border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;cursor:default}
+.logo-m{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#fff,#888);
+display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:900}
+.logo h1{font-size:1rem;font-weight:800;letter-spacing:-.03em}
+.logo h1 span{color:var(--text3);font-weight:500;margin-left:2px}
+.hdr-actions{display:flex;gap:6px;align-items:center}
+.hdr-btn{height:34px;padding:0 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+color:var(--text2);font-size:.78rem;font-weight:600;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:6px}
+.hdr-btn:hover{border-color:var(--border2);color:var(--text)}
+.hdr-btn.primary{background:var(--white);color:#000;border-color:var(--white)}
+.hdr-btn.primary:hover{opacity:.9}
 
-/* ═══ LAYOUT ═══ */
-.app{display:flex;height:calc(100vh - 73px);overflow:hidden}
-.main-area{flex:1;overflow-y:auto;padding:24px}
-.sec{display:none}.sec.on{display:block;animation:fadeIn .3s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* ═══ VIEWS ═══ */
+.view{display:none;animation:vIn .3s ease}.view.on{display:block}
+@keyframes vIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* ═══ FIGMA PANEL (Right) ═══ */
-.figma-panel{width:320px;background:var(--bg2);border-left:1px solid var(--border);
-  overflow-y:auto;transition:all .3s ease;flex-shrink:0}
-.figma-panel.closed{width:0;border:none;overflow:hidden}
-.fp-inner{padding:20px;min-width:320px}
-.fp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.fp-head h3{font-size:.85rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
-.fp-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;
-  padding:4px;transition:var(--tr)}
-.fp-close:hover{color:var(--text)}
-.fp-preview{width:100%;aspect-ratio:1;border-radius:var(--r2);margin-bottom:20px;
-  position:relative;overflow:hidden}
-.fp-preview::after{content:'';position:absolute;top:8px;left:14px;width:30%;height:20%;
-  background:rgba(255,255,255,.18);border-radius:50%;transform:rotate(-20deg);filter:blur(2px)}
-.fp-name{font-size:1.1rem;font-weight:700;margin-bottom:4px}
-.fp-collection{font-size:.75rem;color:var(--text3);margin-bottom:20px}
-.fp-section{margin-bottom:16px}
-.fp-section-title{font-size:.7rem;font-weight:700;color:var(--text4);text-transform:uppercase;
-  letter-spacing:.08em;margin-bottom:8px}
-.fp-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);
-  border-radius:var(--r);margin-bottom:4px;cursor:pointer;transition:var(--tr);border:1px solid transparent}
-.fp-row:hover{border-color:var(--border2);background:var(--bg4)}
-.fp-row:active{transform:scale(.98)}
-.fp-row .label{font-size:.7rem;color:var(--text3);min-width:50px;font-weight:600}
-.fp-row .value{font-size:.8rem;font-weight:600;font-family:'SF Mono','Courier New',monospace;flex:1}
-.fp-row .copy-icon{font-size:.7rem;color:var(--text4);opacity:0;transition:var(--tr)}
-.fp-row:hover .copy-icon{opacity:1}
-.fp-harmonies{display:flex;gap:6px;flex-wrap:wrap}
-.fp-harm-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;transition:var(--tr);
-  border:2px solid transparent}
-.fp-harm-dot:hover{border-color:var(--white);transform:scale(1.15)}
-.fp-empty{text-align:center;padding:60px 20px;color:var(--text4)}
-.fp-empty i{font-size:2rem;margin-bottom:12px;display:block}
-.fp-empty p{font-size:.82rem}
+/* ═══ FILTER BAR ═══ */
+.filters{padding:20px 24px 0;max-width:1400px;margin:0 auto}
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-label{font-size:.72rem;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.06em;
+min-width:64px;flex-shrink:0}
+.filter-pills{display:flex;gap:4px;flex-wrap:wrap}
+.pill{height:30px;padding:0 12px;background:transparent;border:1px solid var(--border);border-radius:20px;
+color:var(--text3);font-size:.75rem;font-weight:600;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:5px;
+white-space:nowrap}
+.pill:hover{border-color:var(--border2);color:var(--text2)}
+.pill.on{background:var(--white);color:#000;border-color:var(--white)}
+.pill .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.filter-meta{padding:0 24px 16px;max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.filter-count{font-size:.78rem;color:var(--text3);font-weight:500}
+.filter-count b{color:var(--text2);font-weight:700}
 
-/* ═══ SECTION HEADS ═══ */
-.sec-title{font-size:1.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
-.sec-desc{font-size:.85rem;color:var(--text3);margin-bottom:24px}
+/* ═══ GRID ═══ */
+.grid-wrap{padding:0 24px 40px;max-width:1400px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.card{border-radius:var(--r3);overflow:hidden;cursor:pointer;transition:var(--trs);
+border:1px solid var(--border);background:var(--bg2);position:relative}
+.card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.card-swatch{aspect-ratio:1;position:relative;overflow:hidden}
+.card-swatch::after{content:'';position:absolute;inset:0;
+background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.6) 100%)}
+.card-info{position:absolute;bottom:0;left:0;right:0;padding:12px 14px;z-index:2}
+.card-name{font-size:.78rem;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.card-tags{display:flex;gap:4px;margin-top:4px}
+.card-tag{font-size:.58rem;font-weight:600;padding:2px 7px;border-radius:10px;
+background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);backdrop-filter:blur(8px)}
+.card-actions{position:absolute;top:8px;right:8px;z-index:2;display:flex;gap:4px;opacity:0;transition:var(--tr)}
+.card:hover .card-actions{opacity:1}
+.card-act{width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);
+border:none;color:#fff;cursor:pointer;font-size:.72rem;transition:var(--tr);display:flex;align-items:center;justify-content:center}
+.card-act:hover{background:rgba(255,255,255,.2)}
+.load-more-wrap{text-align:center;padding:32px 24px}
+.load-more{height:42px;padding:0 28px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);
+color:var(--text2);font-size:.85rem;font-weight:600;cursor:pointer;transition:var(--tr)}
+.load-more:hover{border-color:var(--border2);color:var(--text);background:var(--bg4)}
+.empty-state{text-align:center;padding:80px 24px;color:var(--text4)}
+.empty-state i{font-size:2.5rem;margin-bottom:16px;display:block;opacity:.4}
+.empty-state p{font-size:.9rem}
 
-/* ═══ COLLECTIONS ═══ */
-.coll-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.coll-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);
-  overflow:hidden;cursor:pointer;transition:var(--tr)}
-.coll-card:hover{border-color:var(--border2);transform:translateY(-2px);
-  box-shadow:0 8px 25px rgba(0,0,0,.3)}
-.coll-banner{height:80px;position:relative}
-.coll-banner .coll-dots{position:absolute;bottom:8px;left:10px;display:flex;gap:4px}
-.coll-banner .coll-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3)}
-.coll-body{padding:12px 14px}
-.coll-body h3{font-size:.88rem;font-weight:700;margin-bottom:2px}
-.coll-body p{font-size:.72rem;color:var(--text4)}
-.coll-body .coll-count{font-size:.65rem;color:var(--text3);margin-top:4px;font-weight:600}
+/* ═══ EDITOR ═══ */
+.editor{max-width:720px;margin:0 auto;padding:0 24px 60px}
+.ed-back{display:flex;align-items:center;gap:8px;padding:16px 0;color:var(--text3);font-size:.82rem;
+font-weight:600;cursor:pointer;transition:var(--tr);background:none;border:none}
+.ed-back:hover{color:var(--text)}
+.ed-preview{width:100%;aspect-ratio:16/9;border-radius:var(--r3);margin-bottom:24px;position:relative;
+overflow:hidden;cursor:crosshair;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.ed-preview::after{content:'';position:absolute;top:12px;left:20px;width:25%;height:15%;
+background:rgba(255,255,255,.1);border-radius:50%;transform:rotate(-15deg);filter:blur(4px);pointer-events:none}
+.ed-title{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.ed-tags{display:flex;gap:6px;margin-bottom:28px}
+.ed-tag{font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:20px;
+background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+.ed-section{margin-bottom:28px}
+.ed-section-title{font-size:.72rem;font-weight:700;color:var(--text4);text-transform:uppercase;
+letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 
-/* BACK BTN */
-.back-row{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.back-btn{background:var(--bg3);border:1px solid var(--border);padding:7px 14px;
-  border-radius:var(--r);color:var(--text2);font-family:inherit;font-size:.8rem;
-  font-weight:600;cursor:pointer;transition:var(--tr);display:flex;align-items:center;gap:6px}
-.back-btn:hover{border-color:var(--border2);color:var(--text)}
-.coll-detail-title{font-size:1rem;font-weight:700}
+/* Gradient Bar Editor */
+.ed-bar-wrap{position:relative;margin-bottom:20px}
+.ed-bar{width:100%;height:32px;border-radius:var(--r);position:relative;cursor:pointer;
+box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.ed-stop{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;
+border:2.5px solid var(--white);box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;
+transform:translate(-50%,-50%);transition:box-shadow .15s ease;z-index:2}
+.ed-stop:hover,.ed-stop.on{box-shadow:0 0 0 3px rgba(255,255,255,.3),0 2px 6px rgba(0,0,0,.5)}
+.ed-stop.on{border-width:3px}
+.ed-bar-hint{font-size:.65rem;color:var(--text4);margin-top:6px;text-align:center}
 
-/* COLOR SWATCH GRID */
-.swatch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
-.swatch{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;
-  transition:var(--tr);position:relative}
-.swatch:hover{border-color:var(--border2);transform:translateY(-2px);
-  box-shadow:0 4px 12px rgba(0,0,0,.3)}
-.swatch.selected{border-color:var(--white);box-shadow:0 0 0 1px var(--white)}
-.swatch-circle{width:48px;height:48px;border-radius:50%;position:relative;
-  box-shadow:0 2px 8px rgba(0,0,0,.3);transition:var(--tr)}
-.swatch:hover .swatch-circle{transform:scale(1.08)}
-.swatch-circle::after{content:'';position:absolute;top:5px;left:9px;width:14px;height:8px;
-  background:rgba(255,255,255,.22);border-radius:50%;transform:rotate(-25deg)}
-.swatch-name{font-size:.62rem;font-weight:600;text-align:center;line-height:1.2;color:var(--text2)}
-.swatch-hex{font-size:.58rem;color:var(--text4);font-family:'SF Mono','Courier New',monospace;font-weight:600}
+/* Stop Editor */
+.ed-stops-list{display:flex;flex-direction:column;gap:6px}
+.ed-stop-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);
+border-radius:var(--r);border:1px solid transparent;transition:var(--tr);cursor:pointer}
+.ed-stop-row:hover{border-color:var(--border2)}
+.ed-stop-row.on{border-color:var(--border3);background:var(--bg4)}
+.ed-stop-color{width:32px;height:28px;border-radius:6px;border:1px solid var(--border2);cursor:pointer;
+padding:0;background:none;overflow:hidden;flex-shrink:0}
+.ed-stop-color input{width:100%;height:100%;border:none;cursor:pointer;padding:0}
+.ed-stop-hex{width:80px;background:var(--bg);border:1px solid var(--border);border-radius:6px;
+padding:5px 8px;color:var(--text);font-family:'SF Mono','Fira Code',monospace;font-size:.72rem;
+font-weight:600;outline:none;transition:var(--tr);text-align:center}
+.ed-stop-hex:focus{border-color:var(--border3)}
+.ed-stop-pos{display:flex;align-items:center;gap:4px;flex:1}
+.ed-stop-pos input[type="range"]{flex:1;-webkit-appearance:none;height:3px;border-radius:10px;
+background:var(--bg);outline:none;cursor:pointer}
+.ed-stop-pos input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+border-radius:50%;background:var(--white);cursor:pointer;box-shadow:0 0 3px rgba(0,0,0,.4)}
+.ed-stop-posval{font-size:.68rem;color:var(--text3);font-weight:600;min-width:28px;text-align:right}
+.ed-stop-del{width:26px;height:26px;border-radius:50%;background:none;border:1px solid transparent;
+color:var(--text4);cursor:pointer;font-size:.65rem;transition:var(--tr);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ed-stop-del:hover{border-color:var(--border2);color:var(--text2)}
+.ed-stop-add{width:100%;height:36px;background:none;border:1px dashed var(--border);border-radius:var(--r);
+color:var(--text4);font-size:.75rem;font-weight:600;cursor:pointer;transition:var(--tr);display:flex;align-items:center;justify-content:center;gap:6px}
+.ed-stop-add:hover{border-color:var(--border2);color:var(--text2)}
 
-/* ═══ GRADIENTS ═══ */
-.grad-filters{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
-.grad-filter{padding:6px 14px;background:var(--bg3);border:1px solid var(--border);
-  border-radius:20px;color:var(--text3);font-family:inherit;font-size:.75rem;font-weight:600;
-  cursor:pointer;transition:var(--tr)}
-.grad-filter:hover,.grad-filter.on{border-color:var(--border2);color:var(--text)}
-.grad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.grad-card{border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:var(--tr);
-  border:1px solid var(--border);background:var(--bg2)}
-.grad-card:hover{border-color:var(--border2);transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(0,0,0,.4)}
-.grad-swatch{height:90px;position:relative}
-.grad-swatch::after{content:'';position:absolute;inset:0;
-  background:linear-gradient(45deg,transparent 40%,rgba(255,255,255,.06) 50%,transparent 60%);
-  animation:gradShine 5s ease infinite}
-@keyframes gradShine{0%,100%{transform:translateX(-200%)}50%{transform:translateX(200%)}}
-.grad-info{padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
-.grad-name{font-size:.78rem;font-weight:700}
-.grad-copy-btn{background:none;border:none;color:var(--text4);cursor:pointer;font-size:.75rem;
-  transition:var(--tr);padding:4px}
-.grad-copy-btn:hover{color:var(--text)}
+/* Settings */
+.ed-settings{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ed-setting{display:flex;flex-direction:column;gap:6px}
+.ed-setting label{font-size:.7rem;font-weight:600;color:var(--text3)}
+.ed-type-row{display:flex;gap:4px}
+.ed-type-btn{flex:1;height:32px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+color:var(--text3);font-size:.75rem;font-weight:600;cursor:pointer;transition:var(--tr)}
+.ed-type-btn:hover{border-color:var(--border2);color:var(--text2)}
+.ed-type-btn.on{background:var(--white);color:#000;border-color:var(--white)}
+.ed-angle-row{display:flex;align-items:center;gap:8px}
+.ed-angle-row input{flex:1;-webkit-appearance:none;height:3px;border-radius:10px;
+background:var(--bg);outline:none;cursor:pointer}
+.ed-angle-row input::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+border-radius:50%;background:var(--white);cursor:pointer;box-shadow:0 0 3px rgba(0,0,0,.4)}
+.ed-angle-val{font-size:.72rem;font-weight:600;color:var(--text2);min-width:32px}
 
-/* ═══ GENERATOR ═══ */
-.gen-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:800px){.gen-layout{grid-template-columns:1fr}}
-.gen-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
-.gen-card h3{font-size:.85rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.gen-card h3 i{color:var(--text3)}
-.gen-field{margin-bottom:14px}
-.gen-field label{display:block;font-size:.72rem;font-weight:600;color:var(--text3);margin-bottom:6px;
-  text-transform:uppercase;letter-spacing:.05em}
-.gen-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
-  color:var(--text);padding:9px 12px;font-family:inherit;font-size:.82rem;font-weight:600;
-  cursor:pointer;outline:none;transition:var(--tr);appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center}
-.gen-select:focus{border-color:var(--border2)}
-.gen-slider{width:100%;-webkit-appearance:none;height:4px;border-radius:10px;background:var(--bg4);
-  outline:none;cursor:pointer}
-.gen-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
-  background:var(--white);cursor:pointer;box-shadow:0 0 4px rgba(0,0,0,.4);transition:var(--tr)}
-.gen-slider::-webkit-slider-thumb:hover{transform:scale(1.2)}
-.gen-slider-val{font-size:.72rem;color:var(--text3);font-weight:600;margin-top:4px;text-align:right}
-.gen-color-input{display:flex;align-items:center;gap:8px}
-.gen-color-input input[type="color"]{width:40px;height:34px;border:1px solid var(--border);
-  border-radius:var(--r);cursor:pointer;background:transparent;padding:2px}
-.gen-color-input input[type="text"]{flex:1;background:var(--bg3);border:1px solid var(--border);
-  border-radius:var(--r);padding:8px 12px;color:var(--text);font-family:'SF Mono',monospace;
-  font-size:.82rem;font-weight:600;outline:none;transition:var(--tr)}
-.gen-color-input input[type="text"]:focus{border-color:var(--border2)}
-.gen-btn{width:100%;padding:12px;background:var(--white);color:var(--black);border:none;
-  border-radius:var(--r);font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;
-  transition:var(--tr)}
-.gen-btn:hover{opacity:.9;transform:translateY(-1px)}
-.gen-btn:active{transform:scale(.98)}
-.gen-btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
-.gen-btn-secondary:hover{border-color:var(--border2);opacity:1}
-.gen-result-grad{height:80px;border-radius:var(--r);margin-bottom:12px;cursor:pointer;transition:var(--tr)}
-.gen-result-grad:hover{box-shadow:0 0 20px rgba(255,255,255,.05)}
-.gen-result-colors{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.gen-result-chip{display:flex;align-items:center;gap:6px;background:var(--bg3);padding:6px 10px;
-  border-radius:var(--r);cursor:pointer;transition:var(--tr);border:1px solid var(--border)}
-.gen-result-chip:hover{border-color:var(--border2)}
-.gen-result-dot{width:18px;height:18px;border-radius:50%}
-.gen-result-hex{font-family:'SF Mono',monospace;font-size:.7rem;font-weight:600}
+/* Code Blocks */
+.ed-code{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:8px}
+.ed-code-head{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
+border-bottom:1px solid var(--border)}
+.ed-code-label{font-size:.7rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.ed-code-copy{background:none;border:none;color:var(--text4);cursor:pointer;font-size:.7rem;
+font-weight:600;transition:var(--tr);padding:3px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}
+.ed-code-copy:hover{color:var(--text);background:var(--bg)}
+.ed-code pre{padding:10px 12px;font-family:'SF Mono','Fira Code',monospace;font-size:.72rem;
+color:var(--text2);line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
 
-/* BOT MINI */
-.bot-bar{display:flex;align-items:center;gap:10px;background:var(--bg3);
-  border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:16px}
-.bot-icon{width:28px;height:28px;background:var(--white);border-radius:6px;
-  display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--black);flex-shrink:0}
-.bot-text{font-size:.78rem;color:var(--text2);font-weight:500}
-
-/* ═══ PREVIEW ═══ */
-.prev-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:800px){.prev-layout{grid-template-columns:1fr}}
-.prev-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px}
-.prev-card h3{font-size:.85rem;font-weight:700;margin-bottom:16px}
-.prev-frame{border-radius:var(--r2);padding:28px;min-height:340px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:14px;transition:var(--tr)}
-.prev-frame .pf-title{font-size:1.3rem;font-weight:800}
-.prev-frame .pf-desc{font-size:.82rem;opacity:.7}
-.prev-frame .pf-btn{padding:10px 28px;border-radius:var(--r);font-weight:700;font-size:.85rem;
-  border:none;cursor:pointer;transition:var(--tr)}
-.prev-frame .pf-btn:hover{transform:scale(1.04)}
-.prev-frame .pf-bar{height:8px;border-radius:10px;width:70%}
-.prev-frame .pf-avatar{width:52px;height:52px;border-radius:50%}
-.prev-frame .pf-badge{padding:5px 14px;border-radius:20px;font-size:.7rem;font-weight:700}
-.prev-field{margin-bottom:12px}
-.prev-field label{display:block;font-size:.7rem;font-weight:600;color:var(--text3);margin-bottom:5px}
-.prev-field-row{display:flex;gap:8px;align-items:center}
-.prev-field-row input[type="color"]{width:36px;height:30px;border:1px solid var(--border);
-  border-radius:6px;cursor:pointer;background:transparent;padding:2px}
-.prev-field-row input[type="text"]{flex:1;background:var(--bg3);border:1px solid var(--border);
-  border-radius:6px;padding:6px 10px;color:var(--text);font-family:'SF Mono',monospace;
-  font-size:.78rem;font-weight:600;outline:none}
-.prev-field-row input[type="text"]:focus{border-color:var(--border2)}
+/* Similar */
+.ed-similar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px}
+.ed-sim-card{aspect-ratio:1;border-radius:var(--r);cursor:pointer;transition:var(--tr);
+border:2px solid transparent;position:relative;overflow:hidden}
+.ed-sim-card:hover{border-color:var(--white);transform:scale(1.05)}
+.ed-sim-card::after{content:'';position:absolute;inset:0;
+background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.5) 100%)}
+.ed-sim-name{position:absolute;bottom:4px;left:5px;right:5px;font-size:.55rem;font-weight:600;
+color:#fff;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.6);line-height:1.2}
 
 /* ═══ TOAST ═══ */
-.toast-box{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;
-  display:flex;flex-direction:column;align-items:center;gap:6px}
-.toast{background:var(--white);color:var(--black);padding:10px 20px;border-radius:var(--r);
-  font-size:.8rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.4);
-  animation:toastIn .25s ease,toastOut .25s ease 2s forwards;display:flex;align-items:center;gap:8px}
-@keyframes toastIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+.toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;
+display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.toast{background:var(--white);color:#000;padding:10px 20px;border-radius:var(--r);
+font-size:.8rem;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.4);pointer-events:auto;
+animation:tIn .25s ease,tOut .25s ease 2s forwards;display:flex;align-items:center;gap:8px}
+@keyframes tIn{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes tOut{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}
 
 /* ═══ RESPONSIVE ═══ */
-@media(max-width:900px){
-  .figma-panel{position:fixed;right:0;top:73px;bottom:0;z-index:200;
-    box-shadow:-10px 0 30px rgba(0,0,0,.5)}
-  .figma-panel.closed{width:0}
+@media(max-width:768px){
+  .hdr{padding:0 16px}.filters,.filter-meta,.grid-wrap{padding-left:16px;padding-right:16px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .editor{padding:0 16px 40px}
+  .ed-settings{grid-template-columns:1fr}
+  .ed-similar-grid{grid-template-columns:repeat(auto-fill,minmax(64px,1fr))}
 }
-@media(max-width:600px){
-  .header{flex-direction:column;gap:12px}
-  .header-nav{overflow-x:auto;width:100%}
-  .swatch-grid{grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px}
-  .swatch-circle{width:38px;height:38px}
-  .swatch{padding:8px 4px 8px}
+@media(max-width:480px){
+  .grid{grid-template-columns:repeat(2,1fr);gap:6px}
+  .logo h1 span{display:none}
+  .pill{font-size:.7rem;height:28px;padding:0 10px}
+  .filter-label{min-width:52px;font-size:.65rem}
 }
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
-<header class="header">
+<header class="hdr">
   <div class="logo">
-    <div class="logo-mark">E</div>
-    <h1>Emsly <span>Gradients</span></h1>
+    <div class="logo-m">E</div>
+    <h1>Emsly<span>Gradients</span></h1>
   </div>
-  <nav class="header-nav">
-    <button class="on" data-s="collections"><i class="fas fa-gem"></i> Koleksiyonlar</button>
-    <button data-s="gradients"><i class="fas fa-fill-drip"></i> Gradientler</button>
-    <button data-s="generator"><i class="fas fa-wand-magic-sparkles"></i> Üretici</button>
-    <button data-s="preview"><i class="fas fa-eye"></i> Önizleme</button>
-  </nav>
+  <div class="hdr-actions">
+    <button class="hdr-btn" id="randomBtn"><i class="fas fa-shuffle"></i> Random</button>
+    <button class="hdr-btn primary" id="createBtn"><i class="fas fa-plus"></i> Oluştur</button>
+  </div>
 </header>
 
-<!-- APP -->
-<div class="app">
-
-  <!-- MAIN AREA -->
-  <div class="main-area">
-
-    <!-- COLLECTIONS -->
-    <section id="collections" class="sec on">
-      <div id="collHome">
-        <h2 class="sec-title">Renk Koleksiyonları</h2>
-        <p class="sec-desc">Özenle seçilmiş, uyumlu renk paletleri. Bir koleksiyona tıkla.</p>
-        <div class="coll-grid" id="collGrid"></div>
-      </div>
-      <div id="collDetail" style="display:none">
-        <div class="back-row">
-          <button class="back-btn" id="collBack"><i class="fas fa-arrow-left"></i> Geri</button>
-          <span class="coll-detail-title" id="collDetailTitle"></span>
-        </div>
-        <div class="swatch-grid" id="collSwatches"></div>
-      </div>
-    </section>
-
-    <!-- GRADIENTS -->
-    <section id="gradients" class="sec">
-      <h2 class="sec-title">Hazır Gradientler</h2>
-      <p class="sec-desc">Tıkla → Roblox Lua kodunu kopyala. Hemen kullan.</p>
-      <div class="grad-filters" id="gradFilters"></div>
-      <div class="grad-grid" id="gradGrid"></div>
-    </section>
-
-    <!-- GENERATOR -->
-    <section id="generator" class="sec">
-      <h2 class="sec-title">Akıllı Renk Üretici</h2>
-      <p class="sec-desc">Temel rengi seç, harmoni tipini belirle, üret.</p>
-      <div class="bot-bar">
-        <div class="bot-icon"><i class="fas fa-robot"></i></div>
-        <div class="bot-text" id="botText">Bir renk seç veya ruh hali belirle, sana uyumlu renkler üreteyim 🎨</div>
-      </div>
-      <div class="gen-layout">
-        <div class="gen-card">
-          <h3><i class="fas fa-sliders-h"></i> Ayarlar</h3>
-          <div class="gen-field">
-            <label>Temel Renk</label>
-            <div class="gen-color-input">
-              <input type="color" id="genBaseColor" value="#8b5cf6">
-              <input type="text" id="genBaseHex" value="#8b5cf6">
-            </div>
-          </div>
-          <div class="gen-field">
-            <label>Ruh Hali / Tema</label>
-            <select class="gen-select" id="genMood">
-              <option value="custom">🎯 Manuel (Seçilen renkten)</option>
-              <option value="energetic">🔥 Enerjik</option>
-              <option value="calm">🌊 Sakin</option>
-              <option value="dark">🌑 Karanlık</option>
-              <option value="cute">🌸 Kawaii</option>
-              <option value="cyber">💜 Cyber</option>
-              <option value="nature">🌿 Doğa</option>
-              <option value="sunset">🌅 Gün Batımı</option>
-              <option value="ocean">🌊 Okyanus</option>
-              <option value="galaxy">🌌 Galaksi</option>
-              <option value="candy">🍬 Şeker</option>
-              <option value="royal">👑 Royal</option>
-              <option value="toxic">☢️ Toxic</option>
-              <option value="winter">❄️ Kış</option>
-            </select>
-          </div>
-          <div class="gen-field">
-            <label>Harmoni Tipi</label>
-            <select class="gen-select" id="genHarmony">
-              <option value="analogous">Analogous (Yakın tonlar)</option>
-              <option value="complementary">Complementary (Zıt renkler)</option>
-              <option value="triadic">Triadic (Üçlü)</option>
-              <option value="split">Split Complementary</option>
-              <option value="tetradic">Tetradic (Dörtlü)</option>
-              <option value="monochromatic">Monochromatic (Tek ton)</option>
-            </select>
-          </div>
-          <div class="gen-field">
-            <label>Renk Sayısı: <span id="genCountVal">5</span></label>
-            <input type="range" class="gen-slider" id="genCount" min="3" max="12" value="5">
-          </div>
-          <div class="gen-field">
-            <label>Doygunluk: <span id="genSatVal">70</span>%</label>
-            <input type="range" class="gen-slider" id="genSat" min="10" max="100" value="70">
-          </div>
-          <div class="gen-field">
-            <label>Parlaklık: <span id="genLightVal">50</span>%</label>
-            <input type="range" class="gen-slider" id="genLight" min="10" max="90" value="50">
-          </div>
-          <button class="gen-btn" id="genBtn"><i class="fas fa-wand-magic-sparkles"></i> Üret</button>
-          <div style="height:8px"></div>
-          <button class="gen-btn gen-btn-secondary" id="genAutoBtn"><i class="fas fa-play"></i> Otomatik (3sn)</button>
-        </div>
-        <div class="gen-card">
-          <h3><i class="fas fa-palette"></i> Sonuç</h3>
-          <div class="gen-result-grad" id="genGrad" style="background:linear-gradient(90deg,#8b5cf6,#06b6d4)"></div>
-          <div class="gen-result-colors" id="genColors"></div>
-          <div id="genCodes"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PREVIEW -->
-    <section id="preview" class="sec">
-      <h2 class="sec-title">Canlı UI Önizleme</h2>
-      <p class="sec-desc">Renkleri ayarla, Roblox UI'ının nasıl görüneceğini gör.</p>
-      <div class="prev-layout">
-        <div class="prev-card">
-          <h3>Renk Ayarları</h3>
-          <div class="prev-field"><label>Arka Plan 1</label><div class="prev-field-row"><input type="color" id="pv1" value="#1a1a2e"><input type="text" id="pv1t" value="#1a1a2e"></div></div>
-          <div class="prev-field"><label>Arka Plan 2</label><div class="prev-field-row"><input type="color" id="pv2" value="#16213e"><input type="text" id="pv2t" value="#16213e"></div></div>
-          <div class="prev-field"><label>Yazı Rengi</label><div class="prev-field-row"><input type="color" id="pv3" value="#ffffff"><input type="text" id="pv3t" value="#ffffff"></div></div>
-          <div class="prev-field"><label>Buton</label><div class="prev-field-row"><input type="color" id="pv4" value="#e94560"><input type="text" id="pv4t" value="#e94560"></div></div>
-          <div class="prev-field"><label>Buton Yazı</label><div class="prev-field-row"><input type="color" id="pv5" value="#ffffff"><input type="text" id="pv5t" value="#ffffff"></div></div>
-          <div class="prev-field"><label>Accent / Bar</label><div class="prev-field-row"><input type="color" id="pv6" value="#0f3460"><input type="text" id="pv6t" value="#0f3460"></div></div>
-          <div class="prev-field"><label>Açı: <span id="pvAngV">135</span>°</label><input type="range" class="gen-slider" id="pvAng" min="0" max="360" value="135"></div>
-          <button class="gen-btn" id="pvRandom" style="margin-top:8px"><i class="fas fa-shuffle"></i> Rastgele</button>
-        </div>
-        <div class="prev-card">
-          <h3>Önizleme</h3>
-          <div class="prev-frame" id="pvFrame">
-            <div class="pf-avatar" id="pvAvatar"></div>
-            <div class="pf-title" id="pvTitle">Oyun Mağazası</div>
-            <div class="pf-desc" id="pvDesc">En iyi itemleri keşfet</div>
-            <div class="pf-btn" id="pvBtn">Satın Al — 100 R$</div>
-            <div class="pf-bar" id="pvBar"></div>
-            <div class="pf-badge" id="pvBadge">⭐ Premium</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </div>
-
-  <!-- FIGMA PANEL -->
-  <div class="figma-panel closed" id="figmaPanel">
-    <div class="fp-inner">
-      <div class="fp-head">
-        <h3>Renk Detay</h3>
-        <button class="fp-close" id="fpClose"><i class="fas fa-xmark"></i></button>
-      </div>
-      <div id="fpContent">
-        <div class="fp-empty"><i class="fas fa-droplet"></i><p>Bir renge tıkla<br>detayları burada görüntüle</p></div>
-      </div>
+<!-- GRID VIEW -->
+<div id="gridView" class="view on">
+  <div class="filters">
+    <div class="filter-row">
+      <span class="filter-label">Kategori</span>
+      <div class="filter-pills" id="catPills"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Renk</span>
+      <div class="filter-pills" id="clrPills"></div>
     </div>
   </div>
+  <div class="filter-meta">
+    <span class="filter-count"><b id="countNum">0</b> gradient gösteriliyor</span>
+  </div>
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
+    <div class="load-more-wrap" id="loadMoreWrap">
+      <button class="load-more" id="loadMoreBtn">Daha Fazla Yükle</button>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <i class="fas fa-ghost"></i>
+      <p>Bu filtrelere uygun gradient bulunamadı.</p>
+    </div>
+  </div>
+</div>
 
+<!-- EDITOR VIEW -->
+<div id="editorView" class="view">
+  <div class="editor">
+    <button class="ed-back" id="edBack"><i class="fas fa-arrow-left"></i> Geri</button>
+    <div class="ed-preview" id="edPreview"></div>
+    <h2 class="ed-title" id="edTitle"></h2>
+    <div class="ed-tags" id="edTags"></div>
+
+    <div class="ed-section">
+      <div class="ed-section-title"><i class="fas fa-circle-half-stroke"></i> Renk Noktaları</div>
+      <div class="ed-bar-wrap">
+        <div class="ed-bar" id="edBar"></div>
+        <div class="ed-bar-hint">Renkleri aşağıdan düzenle</div>
+      </div>
+      <div class="ed-stops-list" id="edStopsList"></div>
+      <button class="ed-stop-add" id="edAddStop"><i class="fas fa-plus"></i> Renk Ekle</button>
+    </div>
+
+    <div class="ed-section">
+      <div class="ed-section-title"><i class="fas fa-sliders-h"></i> Ayarlar</div>
+      <div class="ed-settings">
+        <div class="ed-setting">
+          <label>Tip</label>
+          <div class="ed-type-row" id="edTypeRow">
+            <button class="ed-type-btn on" data-t="linear">Linear</button>
+            <button class="ed-type-btn" data-t="radial">Radial</button>
+            <button class="ed-type-btn" data-t="conic">Conic</button>
+          </div>
+        </div>
+        <div class="ed-setting" id="edAngleWrap">
+          <label>Açı: <span id="edAngleVal">135</span>°</label>
+          <div class="ed-angle-row">
+            <input type="range" id="edAngle" min="0" max="360" value="135">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ed-section">
+      <div class="ed-section-title"><i class="fas fa-code"></i> Kod Çıktısı</div>
+      <div class="ed-code">
+        <div class="ed-code-head"><span class="ed-code-label">CSS</span>
+          <button class="ed-code-copy" id="copyCss"><i class="fas fa-copy"></i> Kopyala</button></div>
+        <pre id="cssOut"></pre>
+      </div>
+      <div class="ed-code">
+        <div class="ed-code-head"><span class="ed-code-label">Roblox Lua</span>
+          <button class="ed-code-copy" id="copyLua"><i class="fas fa-copy"></i> Kopyala</button></div>
+        <pre id="luaOut"></pre>
+      </div>
+    </div>
+
+    <div class="ed-section">
+      <div class="ed-section-title"><i class="fas fa-wand-magic-sparkles"></i> Benzer Gradientler</div>
+      <div class="ed-similar-grid" id="edSimilar"></div>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
-<div class="toast-box" id="toastBox"></div>
+<div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-// ═══════════════════════════════════════
-// EMSLY GRADIENTS — ALL LOGIC
-// ═══════════════════════════════════════
+// ═════════════════════════════════════════════
+// EMSLY GRADIENTS — COMPLETE ENGINE
+// ═════════════════════════════════════════════
 
-// === HELPERS ===
-const hexToRgb=h=>{h=h.replace('#','');return{r:parseInt(h.substr(0,2),16),g:parseInt(h.substr(2,2),16),b:parseInt(h.substr(4,2),16)}};
-const rgbToHex=(r,g,b)=>'#'+[r,g,b].map(x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0')).join('');
-const hslToRgb=(h,s,l)=>{h/=360;s/=100;l/=100;let r,g,b;if(!s){r=g=b=l}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,f=(p,q,t)=>{t<0&&(t+=1);t>1&&(t-=1);return t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p};r=f(p,q,h+1/3);g=f(p,q,h);b=f(p,q,h-1/3)}return{r:Math.round(r*255),g:Math.round(g*255),b:Math.round(b*255)}};
-const rgbToHsl=(r,g,b)=>{r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;if(mx===mn)h=s=0;else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;case b:h=((r-g)/d+4)/6;break}}return{h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)}};
-const randHex=()=>'#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0');
-const toast=m=>{const c=document.getElementById('toastBox'),t=document.createElement('div');t.className='toast';t.innerHTML=`<i class="fas fa-check"></i> ${m}`;c.appendChild(t);setTimeout(()=>t.remove(),2500)};
-const cp=t=>{navigator.clipboard.writeText(t).then(()=>toast('Kopyalandı'))};
+// ─── HELPERS ───
+const h2r=h=>{h=h.replace('#','');return{r:parseInt(h.substr(0,2),16),g:parseInt(h.substr(2,2),16),b:parseInt(h.substr(4,2),16)}};
+const r2h=(r,g,b)=>'#'+[r,g,b].map(x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0')).join('');
+const hsl2rgb=(h,s,l)=>{h/=360;s/=100;l/=100;let r,g,b;if(!s)r=g=b=l;else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,f=(p,q,t)=>{t<0&&(t+=1);t>1&&(t-=1);return t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p};r=f(p,q,h+1/3);g=f(p,q,h);b=f(p,q,h-1/3)}return{r:Math.round(r*255),g:Math.round(g*255),b:Math.round(b*255)}};
+const rgb2hsl=(r,g,b)=>{r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;if(mx===mn)h=s=0;else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;case b:h=((r-g)/d+4)/6;break}}return{h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)}};
+const rHex=()=>'#'+Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0');
+function toast(m){const w=document.getElementById('toastWrap'),t=document.createElement('div');
+t.className='toast';t.innerHTML=`<i class="fas fa-check" style="color:#10b981"></i>${m}`;w.appendChild(t);setTimeout(()=>t.remove(),2500)}
+function cpy(t,label){navigator.clipboard.writeText(t).then(()=>toast(label||'Kopyalandı'))}
 
-// === NAV ===
-document.querySelectorAll('.header-nav button').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.header-nav button').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.sec').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on');document.getElementById(b.dataset.s).classList.add('on');
-}));
-
-// === FIGMA PANEL ===
-const fpanel=document.getElementById('figmaPanel');
-document.getElementById('fpClose').addEventListener('click',()=>fpanel.classList.add('closed'));
-
-function openFigma(name,hex,collection){
-  fpanel.classList.remove('closed');
-  const rgb=hexToRgb(hex);
-  const hsl=rgbToHsl(rgb.r,rgb.g,rgb.b);
-  const r3=`Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-  const r3n=`Color3.new(${(rgb.r/255).toFixed(3)}, ${(rgb.g/255).toFixed(3)}, ${(rgb.b/255).toFixed(3)})`;
-
-  // Generate harmonies
-  const harms=[];
-  for(let i=1;i<=5;i++){
-    const nh=(hsl.h+i*30)%360;
-    const c=hslToRgb(nh,hsl.s,hsl.l);
-    harms.push(rgbToHex(c.r,c.g,c.b));
-  }
-
-  document.getElementById('fpContent').innerHTML=`
-    <div class="fp-preview" style="background:${hex}"></div>
-    <div class="fp-name">${name}</div>
-    <div class="fp-collection">${collection||'Renk'}</div>
-    <div class="fp-section">
-      <div class="fp-section-title">Değerler (tıkla → kopyala)</div>
-      <div class="fp-row" onclick="cp('${hex}')"><span class="label">HEX</span><span class="value">${hex.toUpperCase()}</span><i class="fas fa-copy copy-icon"></i></div>
-      <div class="fp-row" onclick="cp('rgb(${rgb.r}, ${rgb.g}, ${rgb.b})')"><span class="label">RGB</span><span class="value">${rgb.r}, ${rgb.g}, ${rgb.b}</span><i class="fas fa-copy copy-icon"></i></div>
-      <div class="fp-row" onclick="cp('hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)')"><span class="label">HSL</span><span class="value">${hsl.h}°, ${hsl.s}%, ${hsl.l}%</span><i class="fas fa-copy copy-icon"></i></div>
-      <div class="fp-row" onclick="cp('${r3}')"><span class="label">Roblox</span><span class="value" style="font-size:.68rem">${r3}</span><i class="fas fa-copy copy-icon"></i></div>
-      <div class="fp-row" onclick="cp('${r3n}')"><span class="label">Color3</span><span class="value" style="font-size:.68rem">${r3n}</span><i class="fas fa-copy copy-icon"></i></div>
-    </div>
-    <div class="fp-section">
-      <div class="fp-section-title">Uyumlu Tonlar</div>
-      <div class="fp-harmonies">${harms.map(h=>`<div class="fp-harm-dot" style="background:${h}" onclick="openFigma('${h}','${h}','Harmoni')" title="${h}"></div>`).join('')}</div>
-    </div>`;
+function buildCSS(colors,stops,angle,type){
+const pairs=colors.map((c,i)=>`${c} ${stops[i]}%`).join(', ');
+if(type==='radial')return`radial-gradient(circle, ${pairs})`;
+if(type==='conic')return`conic-gradient(from ${angle}deg, ${pairs})`;
+return`linear-gradient(${angle}deg, ${pairs})`;
 }
 
-// === COLOR DATABASE ===
-const COLLECTIONS=[
-{id:'gold',name:'Gold',icon:'👑',desc:'Altın ve amber tonları',
-  gradient:'linear-gradient(135deg,#B8860B,#FFD700,#F5E6A0)',
-  colors:[
-    {n:'Dark Gold',h:'#8B6914'},{n:'Antique Gold',h:'#C9A55A'},{n:'Classic Gold',h:'#D4AF37'},
-    {n:'Golden',h:'#FFD700'},{n:'Honey',h:'#EB9605'},{n:'Amber',h:'#FFBF00'},
-    {n:'Goldenrod',h:'#DAA520'},{n:'Pale Gold',h:'#EFC88B'},{n:'Champagne',h:'#F7E7CE'},
-    {n:'Old Gold',h:'#CFB53B'},{n:'Harvest',h:'#DA9100'},{n:'Brass',h:'#B5A642'},
-    {n:'Satin Gold',h:'#CBA135'},{n:'Warm Gold',h:'#F0C75E'},{n:'Light Gold',h:'#FAFAD2'},
-  ]},
-{id:'silver',name:'Silver',icon:'🪙',desc:'Gümüş ve platinum tonları',
-  gradient:'linear-gradient(135deg,#71797E,#C0C0C0,#E5E4E2)',
-  colors:[
-    {n:'Steel',h:'#71797E'},{n:'Dark Silver',h:'#808080'},{n:'Gray',h:'#8B8B8B'},
-    {n:'Silver',h:'#A9A9A9'},{n:'Quicksilver',h:'#A6A6A6'},{n:'Pure Silver',h:'#C0C0C0'},
-    {n:'Pearl Gray',h:'#C4C3C0'},{n:'Ash',h:'#B2BEB5'},{n:'Gainsboro',h:'#DCDCDC'},
-    {n:'Chrome',h:'#DBE4EB'},{n:'Platinum',h:'#E5E4E2'},{n:'Mercury',h:'#9C9C9C'},
-    {n:'Pewter',h:'#8BA8B7'},{n:'Titanium',h:'#878681'},{n:'Aluminum',h:'#D2D4D6'},
-  ]},
-{id:'diamond',name:'Diamond',icon:'💎',desc:'Buz mavisi ve kristal tonları',
-  gradient:'linear-gradient(135deg,#81D4FA,#E0FFFF,#F0F8FF)',
-  colors:[
-    {n:'Sapphire Ice',h:'#81D4FA'},{n:'Sky Crystal',h:'#87CEEB'},{n:'Glacier',h:'#B3E5FC'},
-    {n:'Arctic',h:'#D4F1F9'},{n:'Frost',h:'#E1F5FE'},{n:'Ice',h:'#E0FFFF'},
-    {n:'Opal',h:'#A8C8E0'},{n:'Diamond White',h:'#F0F8FF'},{n:'Crystal',h:'#E8EAF6'},
-    {n:'Prism',h:'#B2EBF2'},{n:'Brilliant',h:'#E3F2FD'},{n:'Celeste',h:'#B2FFFF'},
-    {n:'Aqua Ice',h:'#C5E8F0'},{n:'Snow',h:'#F5F5F5'},{n:'Clear',h:'#F0FFFF'},
-  ]},
-{id:'ruby',name:'Ruby',icon:'❤️‍🔥',desc:'Koyu kırmızı ve yakut tonları',
-  gradient:'linear-gradient(135deg,#4A0404,#9B111E,#DC143C)',
-  colors:[
-    {n:'Dark Cherry',h:'#4A0404'},{n:'Blood',h:'#660000'},{n:'Maroon',h:'#800000'},
-    {n:'Burgundy',h:'#800020'},{n:'Wine',h:'#722F37'},{n:'Merlot',h:'#6E0B14'},
-    {n:'Garnet',h:'#733635'},{n:'Carmine',h:'#960018'},{n:'Ruby',h:'#9B111E'},
-    {n:'Crimson',h:'#DC143C'},{n:'Scarlet',h:'#FF2400'},{n:'Rose Red',h:'#C21E56'},
-    {n:'Cherry',h:'#DE3163'},{n:'Cranberry',h:'#9C0027'},{n:'Vermilion',h:'#E34234'},
-  ]},
-{id:'sapphire',name:'Sapphire',icon:'💙',desc:'Derin mavi ve safir tonları',
-  gradient:'linear-gradient(135deg,#000080,#0047AB,#4169E1)',
-  colors:[
-    {n:'Navy',h:'#000080'},{n:'Midnight',h:'#191970'},{n:'Marine',h:'#042E60'},
-    {n:'Deep Sapphire',h:'#082567'},{n:'Cobalt',h:'#0047AB'},{n:'Sapphire',h:'#0F52BA'},
-    {n:'Royal Blue',h:'#4169E1'},{n:'Azure',h:'#0077BE'},{n:'Denim',h:'#1560BD'},
-    {n:'Steel Blue',h:'#4682B4'},{n:'Cornflower',h:'#6495ED'},{n:'Ocean',h:'#0059B3'},
-    {n:'Electric',h:'#0066FF'},{n:'Indigo',h:'#3F00FF'},{n:'Blue Bell',h:'#A2A2D0'},
-  ]},
-{id:'emerald',name:'Emerald',icon:'💚',desc:'Zümrüt yeşili ve jade tonları',
-  gradient:'linear-gradient(135deg,#1B4332,#2D6A4F,#52B788)',
-  colors:[
-    {n:'Forest',h:'#1B4332'},{n:'Hunter',h:'#355E3B'},{n:'Pine',h:'#01796F'},
-    {n:'Deep Emerald',h:'#046307'},{n:'Emerald',h:'#50C878'},{n:'Jade',h:'#00A86B'},
-    {n:'Viridian',h:'#40826D'},{n:'Sea Green',h:'#2E8B57'},{n:'Shamrock',h:'#009E60'},
-    {n:'Malachite',h:'#0BDA51'},{n:'Spring',h:'#00FF7F'},{n:'Mint',h:'#98FB98'},
-    {n:'Pistachio',h:'#93C572'},{n:'Fern',h:'#4F7942'},{n:'Moss',h:'#8A9A5B'},
-  ]},
-{id:'amethyst',name:'Amethyst',icon:'💜',desc:'Mor, menekşe ve lavanta tonları',
-  gradient:'linear-gradient(135deg,#36013F,#7851A9,#E0B0FF)',
-  colors:[
-    {n:'Deep Purple',h:'#36013F'},{n:'Byzantium',h:'#702963'},{n:'Eggplant',h:'#614051'},
-    {n:'Plum',h:'#8E4585'},{n:'Grape',h:'#6F2DA8'},{n:'Royal Purple',h:'#7851A9'},
-    {n:'Amethyst',h:'#9966CC'},{n:'Iris',h:'#5A4FCF'},{n:'Violet',h:'#7F00FF'},
-    {n:'Orchid',h:'#DA70D6'},{n:'Lavender',h:'#B57EDC'},{n:'Lilac',h:'#C8A2C8'},
-    {n:'Mauve',h:'#E0B0FF'},{n:'Wisteria',h:'#C9A0DC'},{n:'Thistle',h:'#D8BFD8'},
-  ]},
-{id:'rose',name:'Rose Quartz',icon:'🌸',desc:'Pembe, gül ve blush tonları',
-  gradient:'linear-gradient(135deg,#C21E56,#FF69B4,#FFBCD9)',
-  colors:[
-    {n:'Deep Rose',h:'#C21E56'},{n:'Cerise',h:'#DE3163'},{n:'Hot Pink',h:'#FF69B4'},
-    {n:'Rose',h:'#FF007F'},{n:'Punch',h:'#EC5578'},{n:'Flamingo',h:'#FC8EAC'},
-    {n:'Blush',h:'#DE5D83'},{n:'Carnation',h:'#FFA6C9'},{n:'Coral',h:'#FF7F50'},
-    {n:'Salmon',h:'#FA8072'},{n:'Cotton Candy',h:'#FFBCD9'},{n:'Rose Gold',h:'#B76E79'},
-    {n:'Dusty Rose',h:'#DCAE96'},{n:'Peony',h:'#DE6FA1'},{n:'Petal',h:'#F8C8DC'},
-  ]},
-{id:'obsidian',name:'Obsidian',icon:'🖤',desc:'Karanlık UI ve siyah tonları',
-  gradient:'linear-gradient(135deg,#000000,#1a1a1a,#333333)',
-  colors:[
-    {n:'Black',h:'#000000'},{n:'Void',h:'#080808'},{n:'Carbon',h:'#0D0D0D'},
-    {n:'Night',h:'#111111'},{n:'Onyx',h:'#181818'},{n:'Shadow',h:'#1E1E1E'},
-    {n:'Raven',h:'#242424'},{n:'Dark',h:'#2A2A2A'},{n:'Charcoal',h:'#333333'},
-    {n:'Gunmetal',h:'#3A3A3A'},{n:'Slate',h:'#444444'},{n:'Storm',h:'#4F4F4F'},
-    {n:'Iron',h:'#555555'},{n:'Graphite',h:'#5C5C5C'},{n:'Pewter',h:'#666666'},
-  ]},
-{id:'neon',name:'Neon',icon:'⚡',desc:'Parlak neon renkler',
-  gradient:'linear-gradient(135deg,#FF073A,#39FF14,#4D4DFF)',
-  colors:[
-    {n:'Neon Red',h:'#FF073A'},{n:'Neon Rose',h:'#FF006E'},{n:'Neon Pink',h:'#FF6EC7'},
-    {n:'Neon Magenta',h:'#FF00FF'},{n:'Neon Purple',h:'#B026FF'},{n:'Neon Blue',h:'#4D4DFF'},
-    {n:'Neon Cyan',h:'#00FFEF'},{n:'Neon Mint',h:'#00FFA5'},{n:'Neon Green',h:'#39FF14'},
-    {n:'Neon Lime',h:'#BFFF00'},{n:'Neon Yellow',h:'#CCFF00'},{n:'Neon Orange',h:'#FF6700'},
-    {n:'Neon Coral',h:'#FF4040'},{n:'Neon Electric',h:'#7DF9FF'},{n:'Neon Violet',h:'#7F00FF'},
-  ]},
-{id:'sunset',name:'Sunset',icon:'🌅',desc:'Gün batımı ve sıcak tonlar',
-  gradient:'linear-gradient(135deg,#E34234,#FF8C00,#FFD700)',
-  colors:[
-    {n:'Crimson Dusk',h:'#C94C4C'},{n:'Fire',h:'#E34234'},{n:'Tangerine',h:'#FF6347'},
-    {n:'Sunset Red',h:'#E85D04'},{n:'Orange Glow',h:'#FF8C00'},{n:'Mango',h:'#FF9966'},
-    {n:'Amber Light',h:'#F0A500'},{n:'Golden Hour',h:'#FFAB40'},{n:'Peach',h:'#FFCBA4'},
-    {n:'Warm Sand',h:'#EDC9AF'},{n:'Coral Sky',h:'#FF6F61'},{n:'Rose Evening',h:'#F7797D'},
-    {n:'Blush Horizon',h:'#FFB199'},{n:'Sunrise',h:'#FFD700'},{n:'Cream',h:'#FFF3E0'},
-  ]},
-{id:'ocean',name:'Ocean',icon:'🌊',desc:'Deniz, okyanus ve su tonları',
-  gradient:'linear-gradient(135deg,#003545,#0077B6,#90E0EF)',
-  colors:[
-    {n:'Abyss',h:'#003545'},{n:'Deep Sea',h:'#005F73'},{n:'Marine',h:'#023E8A'},
-    {n:'Pacific',h:'#006994'},{n:'Tidal',h:'#0A9396'},{n:'Atlantic',h:'#0077B6'},
-    {n:'Caribbean',h:'#00B4D8'},{n:'Reef',h:'#48CAE4'},{n:'Wave',h:'#94D2BD'},
-    {n:'Lagoon',h:'#90E0EF'},{n:'Seafoam',h:'#ADE8F4'},{n:'Tropical',h:'#CAF0F8'},
-    {n:'Teal',h:'#008080'},{n:'Aqua',h:'#00CED1'},{n:'Turquoise',h:'#40E0D0'},
-  ]},
-{id:'pastel',name:'Pastel',icon:'🧁',desc:'Yumuşak pastel tonlar',
-  gradient:'linear-gradient(135deg,#FFD1DC,#B39EB5,#AEC6CF)',
-  colors:[
-    {n:'Pastel Pink',h:'#FFD1DC'},{n:'Pastel Rose',h:'#FFB7CE'},{n:'Pastel Coral',h:'#F88379'},
-    {n:'Pastel Peach',h:'#FFDAB9'},{n:'Pastel Orange',h:'#FFB347'},{n:'Pastel Yellow',h:'#FDFD96'},
-    {n:'Pastel Lemon',h:'#FFF9C4'},{n:'Pastel Mint',h:'#AAF0D1'},{n:'Pastel Green',h:'#77DD77'},
-    {n:'Pastel Aqua',h:'#C4FAF8'},{n:'Pastel Sky',h:'#BFEFFF'},{n:'Pastel Blue',h:'#AEC6CF'},
-    {n:'Pastel Lavender',h:'#E6E6FA'},{n:'Pastel Lilac',h:'#C3B1E1'},{n:'Pastel Purple',h:'#B39EB5'},
-  ]},
-{id:'cyber',name:'Cyber',icon:'🔮',desc:'Synthwave ve cyberpunk tonları',
-  gradient:'linear-gradient(135deg,#0D0221,#7B2FFF,#FF006E)',
-  colors:[
-    {n:'Void Black',h:'#0D0221'},{n:'Dark Cyber',h:'#150050'},{n:'Deep Indigo',h:'#3F0071'},
-    {n:'Cyber Purple',h:'#7B2FFF'},{n:'Electric Purple',h:'#A855F7'},{n:'Glitch',h:'#B967FF'},
-    {n:'Synth Blue',h:'#0066FF'},{n:'Retro Blue',h:'#01CDFE'},{n:'Cyber Cyan',h:'#00D4FF'},
-    {n:'Matrix Green',h:'#00FF41'},{n:'Neon Teal',h:'#00FF87'},{n:'Vaporwave',h:'#FF71CE'},
-    {n:'Cyber Pink',h:'#FF006E'},{n:'Hot Magenta',h:'#E040FB'},{n:'Laser Red',h:'#FF0040'},
-  ]},
+function avgHue(colors){
+let hSum=0;colors.forEach(c=>{const rgb=h2r(c);const hsl=rgb2hsl(rgb.r,rgb.g,rgb.b);hSum+=hsl.h});
+return hSum/colors.length;
+}
+
+// ─── CATEGORIES & COLORS ───
+const CATS=[
+{id:'all',label:'Tümü',icon:''},
+{id:'pastel',label:'Pastel',icon:'🧁'},
+{id:'neon',label:'Neon',icon:'⚡'},
+{id:'dark',label:'Dark',icon:'🌑'},
+{id:'warm',label:'Warm',icon:'🔥'},
+{id:'cold',label:'Cold',icon:'❄️'},
+{id:'sunset',label:'Sunset',icon:'🌅'},
+{id:'nature',label:'Nature',icon:'🌿'},
+{id:'cyber',label:'Cyber',icon:'💜'},
+{id:'shine',label:'Shine',icon:'✨'},
+{id:'multi',label:'Multi',icon:'🌈'},
+];
+const CLRS=[
+{id:'all',label:'Tümü',hex:null},
+{id:'red',label:'Kırmızı',hex:'#ef4444'},
+{id:'orange',label:'Turuncu',hex:'#f97316'},
+{id:'yellow',label:'Sarı',hex:'#eab308'},
+{id:'green',label:'Yeşil',hex:'#22c55e'},
+{id:'teal',label:'Teal',hex:'#14b8a6'},
+{id:'blue',label:'Mavi',hex:'#3b82f6'},
+{id:'purple',label:'Mor',hex:'#a855f7'},
+{id:'pink',label:'Pembe',hex:'#ec4899'},
 ];
 
-// === RENDER COLLECTIONS ===
-const collGrid=document.getElementById('collGrid');
-COLLECTIONS.forEach(col=>{
-  const card=document.createElement('div');card.className='coll-card';
-  const dots=col.colors.slice(0,5).map(c=>`<div class="coll-dot" style="background:${c.h}"></div>`).join('');
-  card.innerHTML=`<div class="coll-banner" style="background:${col.gradient}"><div class="coll-dots">${dots}</div></div>
-    <div class="coll-body"><h3>${col.icon} ${col.name}</h3><p>${col.desc}</p><div class="coll-count">${col.colors.length} renk</div></div>`;
-  card.addEventListener('click',()=>openCollection(col));
-  collGrid.appendChild(card);
+// ─── GRADIENT DATABASE (160+) ───
+const DB=[
+// === PASTEL ===
+{n:'Lavender Dream',c:['#E8D5F5','#F3E8FF'],cat:'pastel',clr:'purple'},
+{n:'Lilac Mist',c:['#DDD6F3','#FAACA8'],cat:'pastel',clr:'purple'},
+{n:'Soft Violet',c:['#C3B1E1','#E8D5F5','#F5F0FF'],cat:'pastel',clr:'purple'},
+{n:'Rose Petal',c:['#FFD1DC','#FFF0F5'],cat:'pastel',clr:'pink'},
+{n:'Cherry Blossom',c:['#FFB7C5','#FFDEE9'],cat:'pastel',clr:'pink'},
+{n:'Cotton Candy',c:['#FFAFCC','#FFC8DD','#BDE0FE'],cat:'pastel',clr:'pink'},
+{n:'Sky Whisper',c:['#AEC6CF','#D6EAFF'],cat:'pastel',clr:'blue'},
+{n:'Baby Blue',c:['#A1C4FD','#C2E9FB'],cat:'pastel',clr:'blue'},
+{n:'Cloud Nine',c:['#E0C3FC','#8EC5FC'],cat:'pastel',clr:'blue'},
+{n:'Mint Sorbet',c:['#AAF0D1','#D4FCE4'],cat:'pastel',clr:'green'},
+{n:'Sage Garden',c:['#B7E4C7','#D8F3DC'],cat:'pastel',clr:'green'},
+{n:'Lemon Drop',c:['#FFF9C4','#FDFD96'],cat:'pastel',clr:'yellow'},
+{n:'Butter Cream',c:['#FFFACD','#FFEFD5'],cat:'pastel',clr:'yellow'},
+{n:'Peach Fuzz',c:['#FFDAB9','#FFE5CC'],cat:'pastel',clr:'orange'},
+{n:'Apricot Blush',c:['#FBCEB1','#FFE4C4'],cat:'pastel',clr:'orange'},
+{n:'Unicorn',c:['#FEC5E5','#C3B1E1','#AEC6CF'],cat:'pastel',clr:'pink'},
+{n:'Fairy Dust',c:['#F0E6FF','#FFE6F0','#E6F0FF'],cat:'pastel',clr:'purple'},
+{n:'Soft Rainbow',c:['#FFD1DC','#E8D5F5','#AEC6CF','#AAF0D1'],cat:'pastel',clr:'pink'},
+{n:'Marshmallow',c:['#FFF0F5','#F5F0FF','#F0F8FF'],cat:'pastel',clr:'pink'},
+{n:'Pastel Coral',c:['#F88379','#FFC1CC'],cat:'pastel',clr:'red'},
+
+// === NEON ===
+{n:'Electric Purple',c:['#7B2FFF','#B967FF'],cat:'neon',clr:'purple'},
+{n:'Cyber Violet',c:['#8B5CF6','#D946EF'],cat:'neon',clr:'purple'},
+{n:'Neon Grape',c:['#6200EA','#AA00FF','#E040FB'],cat:'neon',clr:'purple'},
+{n:'Hot Pink Rush',c:['#FF006E','#FF69B4'],cat:'neon',clr:'pink'},
+{n:'Neon Rose',c:['#FF0066','#FF6EB4'],cat:'neon',clr:'pink'},
+{n:'Magenta Flash',c:['#FF00FF','#FF69B4','#FF006E'],cat:'neon',clr:'pink'},
+{n:'Electric Blue',c:['#0066FF','#00CCFF'],cat:'neon',clr:'blue'},
+{n:'Laser',c:['#4776E6','#8E54E9'],cat:'neon',clr:'blue'},
+{n:'Neon Ocean',c:['#0047FF','#00D4FF','#7DF9FF'],cat:'neon',clr:'blue'},
+{n:'Matrix',c:['#003300','#00FF41'],cat:'neon',clr:'green'},
+{n:'Toxic Green',c:['#39FF14','#BFFF00'],cat:'neon',clr:'green'},
+{n:'Neon Mint',c:['#00FFA5','#00FF87','#60EFFF'],cat:'neon',clr:'green'},
+{n:'Fire Neon',c:['#FF6700','#FF9500'],cat:'neon',clr:'orange'},
+{n:'Neon Sunset',c:['#FF073A','#FF6700'],cat:'neon',clr:'red'},
+{n:'Rave',c:['#FF00FF','#00FFFF'],cat:'neon',clr:'pink'},
+{n:'Aurora Neon',c:['#00FF87','#60EFFF','#7B2FFF'],cat:'neon',clr:'green'},
+{n:'Synth Wave',c:['#FC00FF','#00DBDE'],cat:'neon',clr:'purple'},
+{n:'Glitch',c:['#FF0000','#00FF00','#0000FF'],cat:'neon',clr:'red'},
+
+// === DARK ===
+{n:'Dark Amethyst',c:['#1A0A2E','#3D1A78'],cat:'dark',clr:'purple'},
+{n:'Midnight Purple',c:['#120136','#35013F','#6B2FA0'],cat:'dark',clr:'purple'},
+{n:'Deep Space',c:['#000000','#1A1A2E','#434343'],cat:'dark',clr:'blue'},
+{n:'Midnight Blue',c:['#0F0C29','#302B63','#24243E'],cat:'dark',clr:'blue'},
+{n:'Dark Ocean',c:['#141E30','#243B55'],cat:'dark',clr:'blue'},
+{n:'Abyss',c:['#000428','#004E92'],cat:'dark',clr:'blue'},
+{n:'Blood Moon',c:['#200122','#6F0000'],cat:'dark',clr:'red'},
+{n:'Dark Wine',c:['#1A0000','#4A0404','#6E0B14'],cat:'dark',clr:'red'},
+{n:'Dark Forest',c:['#0A1F0A','#1B4332'],cat:'dark',clr:'green'},
+{n:'Emerald Night',c:['#071A0E','#1B4332','#2D6A4F'],cat:'dark',clr:'green'},
+{n:'Galaxy',c:['#0F0C29','#302B63','#24243E'],cat:'dark',clr:'purple'},
+{n:'Eclipse',c:['#120136','#035AA6'],cat:'dark',clr:'blue'},
+{n:'Cosmos',c:['#0D0221','#150050','#3F0071'],cat:'dark',clr:'purple'},
+{n:'Obsidian',c:['#0A0A0A','#1A1A1A'],cat:'dark',clr:'purple'},
+{n:'Noir',c:['#1B1B1B','#2C2C2C','#3D3D3D'],cat:'dark',clr:'purple'},
+{n:'Blackboard',c:['#1A1A2E','#16213E','#0F3460'],cat:'dark',clr:'blue'},
+{n:'Dark Teal',c:['#0A2A2A','#134E4A'],cat:'dark',clr:'teal'},
+{n:'Phantom',c:['#0D0D0D','#1A1A2E','#2D1B69'],cat:'dark',clr:'purple'},
+
+// === WARM ===
+{n:'Fire',c:['#FF416C','#FF4B2B'],cat:'warm',clr:'red'},
+{n:'Burning Red',c:['#CB2D3E','#EF473A'],cat:'warm',clr:'red'},
+{n:'Bloody Mary',c:['#FF512F','#DD2476'],cat:'warm',clr:'red'},
+{n:'Sunset Blaze',c:['#FF512F','#F09819'],cat:'warm',clr:'orange'},
+{n:'Mango Pulp',c:['#F09819','#EDDE5D'],cat:'warm',clr:'orange'},
+{n:'Warm Flame',c:['#FF9A9E','#FAD0C4'],cat:'warm',clr:'red'},
+{n:'Peach Kiss',c:['#FFE29F','#FFA99F'],cat:'warm',clr:'orange'},
+{n:'Honey',c:['#EB9605','#FFD700'],cat:'warm',clr:'yellow'},
+{n:'Golden Hour',c:['#F7931E','#FFD23F'],cat:'warm',clr:'yellow'},
+{n:'Sunrise',c:['#FF6B35','#F7931E','#FFD23F'],cat:'warm',clr:'orange'},
+{n:'Ember',c:['#D00000','#E85D04','#FAA307'],cat:'warm',clr:'red'},
+{n:'Tropical Heat',c:['#FA709A','#FEE140'],cat:'warm',clr:'pink'},
+{n:'Coral Reef',c:['#FF7F50','#FF6B6B','#FFA07A'],cat:'warm',clr:'orange'},
+{n:'Red Velvet',c:['#C62828','#E53935','#EF5350'],cat:'warm',clr:'red'},
+{n:'Tangerine Dream',c:['#FF8C00','#FFA500','#FFD700'],cat:'warm',clr:'orange'},
+
+// === COLD ===
+{n:'Arctic',c:['#E0FFFF','#B2EBF2'],cat:'cold',clr:'teal'},
+{n:'Glacier',c:['#A1C4FD','#C2E9FB'],cat:'cold',clr:'blue'},
+{n:'Ice Blue',c:['#74B9FF','#0984E3'],cat:'cold',clr:'blue'},
+{n:'Frozen Teal',c:['#004D40','#00897B','#4DB6AC'],cat:'cold',clr:'teal'},
+{n:'Winter Sea',c:['#2B5876','#4E4376'],cat:'cold',clr:'blue'},
+{n:'Cold Purple',c:['#667EEA','#764BA2'],cat:'cold',clr:'purple'},
+{n:'Frost Violet',c:['#A18CD1','#FBC2EB'],cat:'cold',clr:'purple'},
+{n:'Northern Lights',c:['#43B692','#099FD4','#7B2FFF'],cat:'cold',clr:'green'},
+{n:'Winter Sky',c:['#1E3C72','#2A5298'],cat:'cold',clr:'blue'},
+{n:'Polar Ice',c:['#E3F2FD','#BBDEFB','#90CAF9'],cat:'cold',clr:'blue'},
+{n:'Crystal Lake',c:['#00B4DB','#0083B0'],cat:'cold',clr:'teal'},
+{n:'Blue Steel',c:['#485563','#29323C'],cat:'cold',clr:'blue'},
+{n:'Frozen Rose',c:['#E8CBED','#CFC7F8','#B8D0EB'],cat:'cold',clr:'purple'},
+{n:'Icy Mint',c:['#C4FAF8','#E0FFFF','#F0FFFF'],cat:'cold',clr:'teal'},
+{n:'Snow Storm',c:['#E6E9F0','#EEF1F5'],cat:'cold',clr:'blue'},
+
+// === SUNSET ===
+{n:'California Sunset',c:['#E65C00','#F9D423'],cat:'sunset',clr:'orange'},
+{n:'Desert Dusk',c:['#FF4E50','#F9D423'],cat:'sunset',clr:'red'},
+{n:'Purple Sunset',c:['#7B2FFF','#FF006E','#FF8C00'],cat:'sunset',clr:'purple'},
+{n:'Twilight',c:['#0F2027','#203A43','#2C5364'],cat:'sunset',clr:'blue'},
+{n:'Horizon',c:['#F7797D','#FBD786','#C6FFDD'],cat:'sunset',clr:'red'},
+{n:'Dusk',c:['#2C3E50','#FD746C'],cat:'sunset',clr:'red'},
+{n:'Burning Sky',c:['#FF0844','#FFB199'],cat:'sunset',clr:'red'},
+{n:'Rose Evening',c:['#F5576C','#FF9A9E','#FAD0C4'],cat:'sunset',clr:'pink'},
+{n:'Golden Dusk',c:['#F12711','#F5AF19'],cat:'sunset',clr:'orange'},
+{n:'Pacific Sunset',c:['#FF6B6B','#FFC68A','#8FD3F4'],cat:'sunset',clr:'red'},
+{n:'Malibu',c:['#4FACFE','#00F2FE'],cat:'sunset',clr:'blue'},
+{n:'Summer Breeze',c:['#FDC830','#F37335'],cat:'sunset',clr:'orange'},
+
+// === NATURE ===
+{n:'Amazon',c:['#1B4332','#52B788'],cat:'nature',clr:'green'},
+{n:'Forest Rain',c:['#134E5E','#71B280'],cat:'nature',clr:'green'},
+{n:'Spring Meadow',c:['#43E97B','#38F9D7'],cat:'nature',clr:'green'},
+{n:'Ocean Breeze',c:['#0077B6','#90E0EF'],cat:'nature',clr:'blue'},
+{n:'Mountain Mist',c:['#606C38','#283618','#DDA15E'],cat:'nature',clr:'green'},
+{n:'Desert Sand',c:['#EDC9AF','#D2B48C','#DEB887'],cat:'nature',clr:'orange'},
+{n:'Autumn Leaves',c:['#DAA520','#CD853F','#8B4513'],cat:'nature',clr:'orange'},
+{n:'Sea Foam',c:['#94D2BD','#B7E4C7','#D8F3DC'],cat:'nature',clr:'green'},
+{n:'Earth Tone',c:['#5C4033','#8B7355','#C4A882'],cat:'nature',clr:'orange'},
+{n:'Rain Forest',c:['#11998E','#38EF7D'],cat:'nature',clr:'green'},
+{n:'Olive Garden',c:['#808000','#BDB76B','#F0E68C'],cat:'nature',clr:'green'},
+{n:'Coral Sea',c:['#FF7F50','#20B2AA','#48D1CC'],cat:'nature',clr:'teal'},
+
+// === CYBER ===
+{n:'Synthwave',c:['#0D0221','#7B2FFF','#FF006E'],cat:'cyber',clr:'purple'},
+{n:'Vaporwave',c:['#FF71CE','#01CDFE','#05FFA1'],cat:'cyber',clr:'pink'},
+{n:'Cyberpunk',c:['#150050','#3F0071','#FB2576'],cat:'cyber',clr:'purple'},
+{n:'Retro Arcade',c:['#8B5CF6','#EC4899','#F59E0B'],cat:'cyber',clr:'purple'},
+{n:'Digital Rain',c:['#000000','#003300','#00FF41'],cat:'cyber',clr:'green'},
+{n:'Neon City',c:['#FF006E','#8338EC','#3A86FF'],cat:'cyber',clr:'pink'},
+{n:'Cyber Teal',c:['#0D1B2A','#00B4D8','#0BFFB7'],cat:'cyber',clr:'teal'},
+{n:'Retrowave',c:['#1A0533','#3D1A78','#E040FB'],cat:'cyber',clr:'purple'},
+{n:'Glitch Art',c:['#00F5FF','#FF006E','#FFE500'],cat:'cyber',clr:'teal'},
+{n:'Neo Tokyo',c:['#0A0A0A','#E040FB','#00FFD1'],cat:'cyber',clr:'purple'},
+{n:'Purple Rain',c:['#3B0764','#7C3AED','#A78BFA'],cat:'cyber',clr:'purple'},
+{n:'Electric Dream',c:['#0F172A','#8B5CF6','#06B6D4'],cat:'cyber',clr:'blue'},
+
+// === SHINE (light middle = glossy effect) ===
+{n:'Gold Shine',c:['#92400E','#FDE68A','#B45309'],s:[0,45,100],cat:'shine',clr:'yellow'},
+{n:'Silver Shine',c:['#4B5563','#E5E7EB','#6B7280'],s:[0,42,100],cat:'shine',clr:'blue'},
+{n:'Diamond Shine',c:['#0369A1','#BAE6FD','#0284C7'],s:[0,40,100],cat:'shine',clr:'blue'},
+{n:'Ruby Shine',c:['#7F1D1D','#FCA5A5','#991B1B'],s:[0,45,100],cat:'shine',clr:'red'},
+{n:'Emerald Shine',c:['#064E3B','#6EE7B7','#065F46'],s:[0,42,100],cat:'shine',clr:'green'},
+{n:'Purple Shine',c:['#5B21B6','#C4B5FD','#7C3AED'],s:[0,43,100],cat:'shine',clr:'purple'},
+{n:'Blue Shine',c:['#1E3A8A','#93C5FD','#2563EB'],s:[0,44,100],cat:'shine',clr:'blue'},
+{n:'Pink Shine',c:['#9D174D','#FBCFE8','#BE185D'],s:[0,42,100],cat:'shine',clr:'pink'},
+{n:'Teal Shine',c:['#115E59','#99F6E4','#0F766E'],s:[0,44,100],cat:'shine',clr:'teal'},
+{n:'Copper Shine',c:['#7C2D12','#FDBA74','#9A3412'],s:[0,43,100],cat:'shine',clr:'orange'},
+{n:'Rose Gold Shine',c:['#831843','#FBB6CE','#9D174D'],s:[0,45,100],cat:'shine',clr:'pink'},
+{n:'Platinum Shine',c:['#374151','#F3F4F6','#4B5563'],s:[0,42,100],cat:'shine',clr:'blue'},
+{n:'Amber Shine',c:['#78350F','#FDE68A','#92400E'],s:[0,44,100],cat:'shine',clr:'yellow'},
+{n:'Sapphire Shine',c:['#1E3A5F','#7DD3FC','#1D4ED8'],s:[0,43,100],cat:'shine',clr:'blue'},
+{n:'Jade Shine',c:['#14532D','#86EFAC','#166534'],s:[0,44,100],cat:'shine',clr:'green'},
+{n:'Chrome',c:['#374151','#D1D5DB','#6B7280','#D1D5DB','#374151'],s:[0,25,50,75,100],cat:'shine',clr:'blue'},
+{n:'Holographic',c:['#EC4899','#A78BFA','#60A5FA','#34D399','#FBBF24'],s:[0,25,50,75,100],cat:'shine',clr:'pink'},
+{n:'Pearl White',c:['#D1D5DB','#FFFFFF','#E5E7EB'],s:[0,50,100],cat:'shine',clr:'blue'},
+{n:'Neon Chrome',c:['#7C3AED','#E0E7FF','#EC4899'],s:[0,48,100],cat:'shine',clr:'purple'},
+{n:'Ice Shine',c:['#0C4A6E','#E0F2FE','#075985'],s:[0,45,100],cat:'shine',clr:'blue'},
+
+// === MULTI (3-5 color complex) ===
+{n:'Rainbow',c:['#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#8B00FF'],cat:'multi',clr:'red'},
+{n:'Candy Shop',c:['#FF6B6B','#FFC68A','#FFE66D','#88D8B0'],cat:'multi',clr:'red'},
+{n:'Galaxy Burst',c:['#667EEA','#764BA2','#F093FB','#F5576C'],cat:'multi',clr:'purple'},
+{n:'Tropical',c:['#43E97B','#38F9D7','#4FACFE','#00F2FE'],cat:'multi',clr:'green'},
+{n:'Warm Spectrum',c:['#FF0844','#FFB199','#FFE29F','#FFA99F'],cat:'multi',clr:'red'},
+{n:'Cool Spectrum',c:['#667EEA','#764BA2','#A18CD1','#FBC2EB'],cat:'multi',clr:'purple'},
+{n:'Neon Spectrum',c:['#FF006E','#8338EC','#3A86FF','#00FF87'],cat:'multi',clr:'pink'},
+{n:'Pastel Rainbow',c:['#FFD1DC','#C3B1E1','#AEC6CF','#AAF0D1','#FDFD96'],cat:'multi',clr:'pink'},
+{n:'Sunset Ocean',c:['#FC5C7D','#6A82FB','#08AEEA'],cat:'multi',clr:'pink'},
+{n:'Fire & Ice',c:['#FF416C','#FF4B2B','#A1C4FD','#C2E9FB'],cat:'multi',clr:'red'},
+{n:'Forest Sunset',c:['#134E5E','#71B280','#FDC830','#F37335'],cat:'multi',clr:'green'},
+{n:'Deep Gradient',c:['#0F0C29','#302B63','#24243E','#667EEA'],cat:'multi',clr:'purple'},
+{n:'Miami Vice',c:['#F7797D','#FBD786','#C6FFDD'],cat:'multi',clr:'red'},
+{n:'Northern Sky',c:['#20002C','#4A0E4E','#881B9A','#C238B4'],cat:'multi',clr:'purple'},
+];
+
+// Add default stops if not set
+DB.forEach((g,i)=>{
+  g.id=i;
+  if(!g.s)g.s=g.c.map((_,j)=>Math.round(j/(g.c.length-1)*100));
+  if(!g.angle)g.angle=135;
+  if(!g.type)g.type='linear';
 });
 
-function openCollection(col){
-  document.getElementById('collHome').style.display='none';
-  const det=document.getElementById('collDetail');det.style.display='block';
-  document.getElementById('collDetailTitle').textContent=`${col.icon} ${col.name} — ${col.colors.length} Renk`;
-  const sw=document.getElementById('collSwatches');sw.innerHTML='';
-  col.colors.forEach(c=>{
-    const s=document.createElement('div');s.className='swatch';
-    s.innerHTML=`<div class="swatch-circle" style="background:${c.h}"></div><div class="swatch-name">${c.n}</div><div class="swatch-hex">${c.h}</div>`;
-    s.addEventListener('click',()=>{
-      document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('selected'));
-      s.classList.add('selected');
-      openFigma(c.n,c.h,col.name);
-    });
-    sw.appendChild(s);
+// ─── STATE ───
+let state={
+  cat:'all',clr:'all',
+  displayed:24,
+  editId:null,
+  editColors:[],editStops:[],editAngle:135,editType:'linear',editName:'',
+  selectedStop:0
+};
+
+// ─── FILTER & RENDER ───
+function getFiltered(){
+  return DB.filter(g=>{
+    if(state.cat!=='all'&&g.cat!==state.cat)return false;
+    if(state.clr!=='all'&&g.clr!==state.clr)return false;
+    return true;
   });
 }
 
-document.getElementById('collBack').addEventListener('click',()=>{
-  document.getElementById('collHome').style.display='block';
-  document.getElementById('collDetail').style.display='none';
-});
-
-// === GRADIENTS ===
-const GRADS=[
-{n:'Sunset Blaze',c:['#FF512F','#F09819'],t:'warm'},{n:'Warm Flame',c:['#ff9a9e','#fad0c4'],t:'warm'},
-{n:'Juicy Peach',c:['#ffecd2','#fcb69f'],t:'warm'},{n:'Lady Lips',c:['#ff9a9e','#fecfef'],t:'warm'},
-{n:'Fire Brick',c:['#cb2d3e','#ef473a'],t:'warm'},{n:'Burning',c:['#FF416C','#FF4B2B'],t:'warm'},
-{n:'Mango Pulp',c:['#F09819','#EDDE5D'],t:'warm'},{n:'Bloody Mary',c:['#FF512F','#DD2476'],t:'warm'},
-{n:'Cherry',c:['#EB3349','#F45C43'],t:'warm'},{n:'Flare',c:['#f12711','#f5af19'],t:'warm'},
-{n:'Frozen Dreams',c:['#fdcbf1','#e6dee9'],t:'cool'},{n:'Winter Neva',c:['#a1c4fd','#c2e9fb'],t:'cool'},
-{n:'Dusty Grass',c:['#d4fc79','#96e6a1'],t:'cool'},{n:'Heavy Rain',c:['#cfd9df','#e2ebf0'],t:'cool'},
-{n:'Plum Plate',c:['#667eea','#764ba2'],t:'cool'},{n:'Happy Fisher',c:['#89F7FE','#66A6FF'],t:'cool'},
-{n:'Cold Evening',c:['#0c3483','#a2b6df'],t:'cool'},{n:'Night Sky',c:['#1e3c72','#2a5298'],t:'cool'},
-{n:'Deep Sea',c:['#2b5876','#4e4376'],t:'cool'},{n:'Blue Ocean',c:['#2E3192','#1BFFFF'],t:'cool'},
-{n:'Neon Life',c:['#B6116B','#00FFFF'],t:'neon'},{n:'Neon Glow',c:['#00ff87','#60efff'],t:'neon'},
-{n:'Electric',c:['#4776E6','#8E54E9'],t:'neon'},{n:'Neon Dream',c:['#7B2FFF','#E040FB'],t:'neon'},
-{n:'Matrix',c:['#000000','#00FF00'],t:'neon'},{n:'Synth Wave',c:['#FC00FF','#00DBDE'],t:'neon'},
-{n:'Laser',c:['#CCFF00','#00FF87'],t:'neon'},{n:'Neon City',c:['#FF006E','#8338EC','#3A86FF'],t:'neon'},
-{n:'Rave',c:['#FF00FF','#00FFFF'],t:'neon'},{n:'Aurora',c:['#00FF87','#60EFFF','#7B2FFF'],t:'neon'},
-{n:'Pastel Dream',c:['#FFD1DC','#E6E6FA'],t:'pastel'},{n:'Candy Floss',c:['#FFB7C5','#FFDAB9'],t:'pastel'},
-{n:'Soft Cloud',c:['#E0C3FC','#8EC5FC'],t:'pastel'},{n:'Cotton Candy',c:['#FFAFCC','#BDE0FE'],t:'pastel'},
-{n:'Unicorn',c:['#FEC5E5','#F9D5E5','#EEAECA'],t:'pastel'},{n:'Lollipop',c:['#A6C0FE','#F68084'],t:'pastel'},
-{n:'Blossom',c:['#FBC2EB','#A6C1EE'],t:'pastel'},{n:'Fairy',c:['#F0E6FF','#FFE6F0'],t:'pastel'},
-{n:'Dark Moon',c:['#0F0C29','#302B63','#24243E'],t:'dark'},{n:'Midnight',c:['#232526','#414345'],t:'dark'},
-{n:'Deep Space',c:['#000000','#434343'],t:'dark'},{n:'Blackboard',c:['#1A1A2E','#16213E','#0F3460'],t:'dark'},
-{n:'Dark Ocean',c:['#141E30','#243B55'],t:'dark'},{n:'Abyss',c:['#000428','#004e92'],t:'dark'},
-{n:'Obsidian',c:['#0A0A0A','#1A1A2E'],t:'dark'},{n:'Void',c:['#09203F','#537895'],t:'dark'},
-{n:'Eclipse',c:['#120136','#035AA6'],t:'dark'},{n:'Noir',c:['#1B1B1B','#2C2C2C','#3D3D3D'],t:'dark'},
-{n:'Instagram',c:['#833AB4','#FD1D1D','#FCB045'],t:'brand'},{n:'Discord',c:['#5865F2','#EB459E'],t:'brand'},
-{n:'Spotify',c:['#1DB954','#191414'],t:'brand'},{n:'TikTok',c:['#69C9D0','#EE1D52'],t:'brand'},
-{n:'Twitch',c:['#9146FF','#772CE8'],t:'brand'},{n:'Roblox',c:['#E2231A','#00A2FF'],t:'brand'},
-];
-
-const gCats=['all','warm','cool','neon','pastel','dark','brand'];
-const gCatNames={all:'Tümü',warm:'Sıcak',cool:'Soğuk',neon:'Neon',pastel:'Pastel',dark:'Karanlık',brand:'Marka'};
-const gFilters=document.getElementById('gradFilters');
-gCats.forEach(c=>{const b=document.createElement('button');b.className='grad-filter'+(c==='all'?' on':'');
-b.textContent=gCatNames[c];b.dataset.c=c;b.addEventListener('click',()=>{
-document.querySelectorAll('.grad-filter').forEach(x=>x.classList.remove('on'));
-b.classList.add('on');renderGrads()});gFilters.appendChild(b)});
-
-const gGrid=document.getElementById('gradGrid');
-function renderGrads(){
-  const cat=document.querySelector('.grad-filter.on').dataset.c;
-  gGrid.innerHTML='';
-  GRADS.filter(g=>cat==='all'||g.t===cat).forEach(g=>{
-    const gr=`linear-gradient(135deg, ${g.c.join(', ')})`;
-    const card=document.createElement('div');card.className='grad-card';
-    card.innerHTML=`<div class="grad-swatch" style="background:${gr}"></div>
-      <div class="grad-info"><span class="grad-name">${g.n}</span>
-      <button class="grad-copy-btn" title="CSS kopyala"><i class="fas fa-copy"></i></button></div>`;
-    card.querySelector('.grad-copy-btn').addEventListener('click',e=>{
-      e.stopPropagation();cp(`background: ${gr};`)});
-    card.addEventListener('click',()=>{
-      const kp=g.c.map((c,i)=>{const rgb=hexToRgb(c);const p=(i/(g.c.length-1));
-        return`  ColorSequenceKeypoint.new(${p.toFixed(2)}, Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b}))`}).join(',\n');
-      cp(`ColorSequence.new({\n${kp}\n})`);
-    });
-    gGrid.appendChild(card);
+// Build pills
+function buildPills(){
+  const cp=document.getElementById('catPills');
+  CATS.forEach(c=>{
+    const b=document.createElement('button');b.className='pill'+(c.id==='all'?' on':'');
+    b.innerHTML=c.icon?(c.icon+' '+c.label):c.label;b.dataset.id=c.id;
+    b.onclick=()=>{state.cat=c.id;state.displayed=24;
+    document.querySelectorAll('#catPills .pill').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderGrid()};
+    cp.appendChild(b);
+  });
+  const clp=document.getElementById('clrPills');
+  CLRS.forEach(c=>{
+    const b=document.createElement('button');b.className='pill'+(c.id==='all'?' on':'');
+    if(c.hex)b.innerHTML=`<span class="dot" style="background:${c.hex}"></span>${c.label}`;
+    else b.textContent=c.label;
+    b.dataset.id=c.id;
+    b.onclick=()=>{state.clr=c.id;state.displayed=24;
+    document.querySelectorAll('#clrPills .pill').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderGrid()};
+    clp.appendChild(b);
   });
 }
-renderGrads();
 
-// === GENERATOR ===
-(function(){
-  const moods={
-    custom:null,
-    energetic:{h:[0,50],s:[75,100],l:[45,60],m:'🔥 Enerjik ve canlı renkler ürettim!'},
-    calm:{h:[180,240],s:[25,55],l:[55,75],m:'🌊 Sakin ve huzurlu tonlar hazır.'},
-    dark:{h:[0,360],s:[15,50],l:[8,30],m:'🌑 Karanlık ve derin tonlar oluşturdum.'},
-    cute:{h:[300,370],s:[45,70],l:[70,85],m:'🌸 Kawaii tonlar çok tatlı oldu!'},
-    cyber:{h:[250,320],s:[80,100],l:[40,60],m:'💜 Cyberpunk atmosferi yakaladım!'},
-    nature:{h:[80,160],s:[35,65],l:[30,55],m:'🌿 Doğadan ilham aldım.'},
-    sunset:{h:[0,40],s:[65,90],l:[50,70],m:'🌅 Gün batımı gibi sıcak tonlar!'},
-    ocean:{h:[180,220],s:[50,80],l:[30,55],m:'🌊 Okyanus derinliklerinden renkler.'},
-    galaxy:{h:[250,310],s:[50,85],l:[15,50],m:'🌌 Galaksi tonları hazır!'},
-    candy:{h:[310,390],s:[55,80],l:[65,82],m:'🍬 Şeker gibi tatlı!'},
-    royal:{h:[255,280],s:[50,75],l:[20,45],m:'👑 Kraliyet tonları yüklendi.'},
-    toxic:{h:[85,140],s:[80,100],l:[35,55],m:'☢️ Toxic neon aktif!'},
-    winter:{h:[195,230],s:[15,45],l:[65,85],m:'❄️ Kış tonları buz gibi.'},
-  };
+function renderGrid(){
+  const filtered=getFiltered();
+  const showing=filtered.slice(0,state.displayed);
+  const grid=document.getElementById('grid');
+  const empty=document.getElementById('emptyState');
+  const lmw=document.getElementById('loadMoreWrap');
+  const cnt=document.getElementById('countNum');
 
-  const baseColor=document.getElementById('genBaseColor');
-  const baseHex=document.getElementById('genBaseHex');
-  const moodSel=document.getElementById('genMood');
-  const harmSel=document.getElementById('genHarmony');
-  const countS=document.getElementById('genCount');
-  const satS=document.getElementById('genSat');
-  const lightS=document.getElementById('genLight');
-  const countV=document.getElementById('genCountVal');
-  const satV=document.getElementById('genSatVal');
-  const lightV=document.getElementById('genLightVal');
-  let autoI=null;
+  cnt.textContent=filtered.length;
+  grid.innerHTML='';
 
-  baseColor.addEventListener('input',e=>baseHex.value=e.target.value);
-  baseHex.addEventListener('input',e=>{if(/^#[0-9a-f]{6}$/i.test(e.target.value))baseColor.value=e.target.value});
-  countS.addEventListener('input',()=>countV.textContent=countS.value);
-  satS.addEventListener('input',()=>satV.textContent=satS.value);
-  lightS.addEventListener('input',()=>lightV.textContent=lightS.value);
+  if(!filtered.length){empty.style.display='block';lmw.style.display='none';return;}
+  empty.style.display='none';
 
-  function generate(){
-    const mood=moodSel.value;
-    const harmony=harmSel.value;
-    const count=+countS.value;
-    const satMod=+satS.value;
-    const lightMod=+lightS.value;
-    let colors=[];
-
-    let baseH,baseS,baseL;
-
-    if(mood==='custom'){
-      const rgb=hexToRgb(baseColor.value);
-      const hsl=rgbToHsl(rgb.r,rgb.g,rgb.b);
-      baseH=hsl.h;baseS=hsl.s*(satMod/70);baseL=hsl.l*(lightMod/50);
-    }else{
-      const p=moods[mood];
-      baseH=p.h[0]+Math.random()*(p.h[1]-p.h[0]);
-      baseS=p.s[0]+(satMod/100)*(p.s[1]-p.s[0]);
-      baseL=p.l[0]+(lightMod/100)*(p.l[1]-p.l[0]);
-      document.getElementById('botText').textContent=p.m;
-    }
-
-    baseS=Math.max(5,Math.min(100,baseS));
-    baseL=Math.max(5,Math.min(95,baseL));
-
-    switch(harmony){
-      case 'analogous':
-        for(let i=0;i<count;i++){
-          const h=(baseH+(i-Math.floor(count/2))*25+360)%360;
-          const s=baseS+Math.random()*8-4;
-          const l=baseL+(i-Math.floor(count/2))*4;
-          const rgb=hslToRgb(h,Math.max(5,Math.min(100,s)),Math.max(5,Math.min(95,l)));
-          colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
-        }break;
-      case 'complementary':
-        const half=Math.ceil(count/2);
-        for(let i=0;i<half;i++){
-          const h=(baseH+i*12)%360;
-          const rgb=hslToRgb(h,baseS,baseL+(i*5));
-          colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
-        }
-        for(let i=0;i<count-half;i++){
-          const h=(baseH+180+i*12)%360;
-          const rgb=hslToRgb(h,baseS,baseL+(i*5));
-          colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
-        }break;
-      case 'triadic':
-        [0,120,240].forEach((off,oi)=>{
-          const perGroup=Math.ceil(count/3);
-          for(let i=0;i<perGroup&&colors.length<count;i++){
-            const h=(baseH+off+i*10)%360;
-            const rgb=hslToRgb(h,baseS+Math.random()*6-3,baseL+i*4);
-            colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
-          }
-        });break;
-      case 'split':
-        [0,150,210].forEach((off,oi)=>{
-          const perGroup=Math.ceil(count/3);
-          for(let i=0;i<perGroup&&colors.length<count;i++){
-            const h=(baseH+off+i*8)%360;
-            const rgb=hslToRgb(h,baseS,baseL+i*3);
-            colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
-          }
-        });break;
-      case 'tetradic':
-        [0,90,180,270].forEach((off,oi)=>{
-          const perGroup=Math.ceil(count/4);
-          for(let i=0;i<perGroup&&colors.length<count;i++){
-            const h=(baseH+off+i*8)%360;
-            const rgb=hslToRgb(h,baseS,baseL+i*3);
-            colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
-          }
-        });break;
-      case 'monochromatic':
-        for(let i=0;i<count;i++){
-          const l=15+((80/(count-1))*i);
-          const s=baseS+(Math.random()*10-5);
-          const rgb=hslToRgb(baseH,Math.max(5,Math.min(100,s)),Math.max(5,Math.min(95,l)));
-          colors.push(rgbToHex(rgb.r,rgb.g,rgb.b));
-        }break;
-    }
-
-    colors=colors.slice(0,count);
-
-    // Render
-    document.getElementById('genGrad').style.background=`linear-gradient(90deg, ${colors.join(', ')})`;
-    const cc=document.getElementById('genColors');cc.innerHTML='';
-    colors.forEach(c=>{
-      const ch=document.createElement('div');ch.className='gen-result-chip';
-      ch.innerHTML=`<div class="gen-result-dot" style="background:${c}"></div><span class="gen-result-hex">${c.toUpperCase()}</span>`;
-      ch.addEventListener('click',()=>{
-        const rgb=hexToRgb(c);
-        cp(`Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b})`);
-      });
-      cc.appendChild(ch);
-    });
-
-    const codes=document.getElementById('genCodes');
-    const luaV=colors.map((c,i)=>{const rgb=hexToRgb(c);return`local c${i+1} = Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b})`}).join('\n');
-    const kp=colors.map((c,i)=>{const rgb=hexToRgb(c);const p=(i/(colors.length-1));return`  ColorSequenceKeypoint.new(${p.toFixed(2)}, Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b}))`}).join(',\n');
-    const seqCode=`ColorSequence.new({\n${kp}\n})`;
-
-    codes.innerHTML=`
-      <div style="margin-top:12px">
-        <div class="fp-row" onclick="cp(\`${luaV.replace(/`/g,"'")}\`)" style="background:var(--bg3);border-radius:var(--r);padding:10px 12px;cursor:pointer;margin-bottom:6px;border:1px solid var(--border)">
-          <span class="label" style="color:var(--text3);font-size:.7rem;font-weight:600">Lua</span>
-          <span class="value" style="font-size:.68rem;font-weight:600;font-family:monospace;color:var(--text2)">Color3 Değişkenler</span>
-          <i class="fas fa-copy copy-icon" style="opacity:.5;font-size:.7rem"></i>
+  showing.forEach(g=>{
+    const card=document.createElement('div');card.className='card';
+    const css=buildCSS(g.c,g.s,g.angle,g.type);
+    const catLabel=CATS.find(c=>c.id===g.cat);
+    const clrLabel=CLRS.find(c=>c.id===g.clr);
+    card.innerHTML=`
+      <div class="card-swatch" style="background:${css}">
+        <div class="card-actions">
+          <button class="card-act copy-act" title="CSS Kopyala"><i class="fas fa-copy"></i></button>
+          <button class="card-act lua-act" title="Lua Kopyala"><i class="fas fa-code"></i></button>
         </div>
-        <div class="fp-row" onclick="cp(\`${seqCode.replace(/`/g,"'")}\`)" style="background:var(--bg3);border-radius:var(--r);padding:10px 12px;cursor:pointer;border:1px solid var(--border)">
-          <span class="label" style="color:var(--text3);font-size:.7rem;font-weight:600">Lua</span>
-          <span class="value" style="font-size:.68rem;font-weight:600;font-family:monospace;color:var(--text2)">ColorSequence</span>
-          <i class="fas fa-copy copy-icon" style="opacity:.5;font-size:.7rem"></i>
+        <div class="card-info">
+          <div class="card-name">${g.n}</div>
+          <div class="card-tags">
+            <span class="card-tag">${catLabel?catLabel.label:g.cat}</span>
+            <span class="card-tag">${clrLabel?clrLabel.label:g.clr}</span>
+          </div>
         </div>
       </div>`;
-  }
-
-  document.getElementById('genBtn').addEventListener('click',generate);
-  const autoBtn=document.getElementById('genAutoBtn');
-  autoBtn.addEventListener('click',()=>{
-    if(autoI){clearInterval(autoI);autoI=null;
-      autoBtn.innerHTML='<i class="fas fa-play"></i> Otomatik (3sn)';toast('Durduruldu')}
-    else{generate();autoI=setInterval(generate,3000);
-      autoBtn.innerHTML='<i class="fas fa-stop"></i> Durdur';toast('Otomatik üretim başladı')}
+    card.querySelector('.copy-act').onclick=e=>{e.stopPropagation();cpy(`background: ${css};`,'CSS kopyalandı')};
+    card.querySelector('.lua-act').onclick=e=>{e.stopPropagation();
+      const kp=g.c.map((c,i)=>{const rgb=h2r(c);return`  ColorSequenceKeypoint.new(${(g.s[i]/100).toFixed(2)}, Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b}))`}).join(',\n');
+      cpy(`ColorSequence.new({\n${kp}\n})`,'Lua kopyalandı')};
+    card.onclick=()=>openEditor(g);
+    grid.appendChild(card);
   });
-  generate();
-})();
 
-// === PREVIEW ===
-(function(){
-  const ids=['pv1','pv2','pv3','pv4','pv5','pv6'];
-  const frame=document.getElementById('pvFrame');
-  const title=document.getElementById('pvTitle');
-  const desc=document.getElementById('pvDesc');
-  const btn=document.getElementById('pvBtn');
-  const bar=document.getElementById('pvBar');
-  const avatar=document.getElementById('pvAvatar');
-  const badge=document.getElementById('pvBadge');
-  const angS=document.getElementById('pvAng');
-  const angV=document.getElementById('pvAngV');
+  if(state.displayed>=filtered.length)lmw.style.display='none';
+  else{lmw.style.display='block';
+    document.getElementById('loadMoreBtn').textContent=`Daha Fazla Yükle (${filtered.length-state.displayed} kalan)`}
+}
 
-  function upd(){
-    const v=ids.map(id=>document.getElementById(id).value);
-    const ang=angS.value;angV.textContent=ang;
-    frame.style.background=`linear-gradient(${ang}deg, ${v[0]}, ${v[1]})`;
-    title.style.color=v[2];desc.style.color=v[2];
-    btn.style.background=v[3];btn.style.color=v[4];
-    bar.style.background=`linear-gradient(90deg, ${v[3]}, ${v[5]})`;
-    avatar.style.background=`linear-gradient(135deg, ${v[0]}, ${v[5]})`;
-    badge.style.background=v[5];badge.style.color=v[4];
-  }
+document.getElementById('loadMoreBtn').onclick=()=>{state.displayed+=24;renderGrid()};
 
-  ids.forEach(id=>{
-    const c=document.getElementById(id),t=document.getElementById(id+'t');
-    c.addEventListener('input',e=>{t.value=e.target.value;upd()});
-    t.addEventListener('input',e=>{if(/^#[0-9a-f]{6}$/i.test(e.target.value)){c.value=e.target.value;upd()}});
+// ─── EDITOR ───
+function openEditor(g){
+  state.editId=g.id;
+  state.editColors=[...g.c];
+  state.editStops=[...g.s];
+  state.editAngle=g.angle||135;
+  state.editType=g.type||'linear';
+  state.editName=g.n;
+  state.selectedStop=0;
+  document.getElementById('gridView').classList.remove('on');
+  document.getElementById('editorView').classList.add('on');
+  window.scrollTo(0,0);
+  updateEditor();
+  renderSimilar(g);
+}
+
+function closeEditor(){
+  document.getElementById('editorView').classList.remove('on');
+  document.getElementById('gridView').classList.add('on');
+}
+document.getElementById('edBack').onclick=closeEditor;
+
+function updateEditor(){
+  const css=buildCSS(state.editColors,state.editStops,state.editAngle,state.editType);
+  // Preview
+  document.getElementById('edPreview').style.background=css;
+  // Title & tags
+  document.getElementById('edTitle').textContent=state.editName;
+  const og=DB.find(g=>g.id===state.editId);
+  const catL=CATS.find(c=>c.id===(og?og.cat:''));
+  const clrL=CLRS.find(c=>c.id===(og?og.clr:''));
+  document.getElementById('edTags').innerHTML=
+    `<span class="ed-tag">${catL?catL.icon+' '+catL.label:''}</span>
+     <span class="ed-tag">${clrL?clrL.label:''}</span>
+     <span class="ed-tag">${state.editColors.length} renk</span>`;
+
+  // Gradient bar
+  const bar=document.getElementById('edBar');
+  bar.style.background=buildCSS(state.editColors,state.editStops,90,'linear');
+  bar.innerHTML='';
+  state.editColors.forEach((c,i)=>{
+    const dot=document.createElement('div');dot.className='ed-stop'+(i===state.selectedStop?' on':'');
+    dot.style.left=state.editStops[i]+'%';dot.style.background=c;
+    dot.onclick=e=>{e.stopPropagation();state.selectedStop=i;updateEditor()};
+    bar.appendChild(dot);
   });
-  angS.addEventListener('input',upd);
 
-  document.getElementById('pvRandom').addEventListener('click',()=>{
-    ids.forEach(id=>{const c=randHex();
-      document.getElementById(id).value=c;document.getElementById(id+'t').value=c});
-    upd();toast('Rastgele renkler yüklendi')});
-  upd();
-})();
+  // Stops list
+  const list=document.getElementById('edStopsList');list.innerHTML='';
+  state.editColors.forEach((c,i)=>{
+    const row=document.createElement('div');row.className='ed-stop-row'+(i===state.selectedStop?' on':'');
+    row.innerHTML=`
+      <div class="ed-stop-color"><input type="color" value="${c}" data-i="${i}"></div>
+      <input class="ed-stop-hex" type="text" value="${c.toUpperCase()}" data-i="${i}">
+      <div class="ed-stop-pos">
+        <input type="range" min="0" max="100" value="${state.editStops[i]}" data-i="${i}">
+        <span class="ed-stop-posval">${state.editStops[i]}%</span>
+      </div>
+      ${state.editColors.length>2?`<button class="ed-stop-del" data-i="${i}"><i class="fas fa-xmark"></i></button>`:''}`;
+
+    row.querySelector('input[type="color"]').onchange=e=>{state.editColors[i]=e.target.value;updateEditor()};
+    row.querySelector('.ed-stop-hex').onchange=e=>{
+      let v=e.target.value;if(!v.startsWith('#'))v='#'+v;
+      if(/^#[0-9a-f]{6}$/i.test(v)){state.editColors[i]=v;updateEditor()}};
+    row.querySelector('input[type="range"]').oninput=e=>{state.editStops[i]=+e.target.value;updateEditor()};
+    const del=row.querySelector('.ed-stop-del');
+    if(del)del.onclick=()=>{state.editColors.splice(i,1);state.editStops.splice(i,1);
+      if(state.selectedStop>=state.editColors.length)state.selectedStop=state.editColors.length-1;updateEditor()};
+    row.onclick=()=>{state.selectedStop=i;updateEditor()};
+    list.appendChild(row);
+  });
+
+  // Type buttons
+  document.querySelectorAll('#edTypeRow .ed-type-btn').forEach(b=>{
+    b.classList.toggle('on',b.dataset.t===state.editType);
+  });
+  // Angle
+  document.getElementById('edAngle').value=state.editAngle;
+  document.getElementById('edAngleVal').textContent=state.editAngle;
+  document.getElementById('edAngleWrap').style.display=state.editType==='radial'?'none':'flex';
+
+  // CSS output
+  const cssCode=`background: ${css};`;
+  document.getElementById('cssOut').textContent=cssCode;
+  // Lua output
+  const kp=state.editColors.map((c,i)=>{const rgb=h2r(c);
+    return`  ColorSequenceKeypoint.new(${(state.editStops[i]/100).toFixed(2)}, Color3.fromRGB(${rgb.r}, ${rgb.g}, ${rgb.b}))`}).join(',\n');
+  const luaCode=`local gradient = Instance.new("UIGradient")\ngradient.Color = ColorSequence.new({\n${kp}\n})\ngradient.Rotation = ${state.editAngle}`;
+  document.getElementById('luaOut').textContent=luaCode;
+  // Copy handlers
+  document.getElementById('copyCss').onclick=()=>cpy(cssCode,'CSS kopyalandı');
+  document.getElementById('copyLua').onclick=()=>cpy(luaCode,'Lua kopyalandı');
+}
+
+// Add stop
+document.getElementById('edAddStop').onclick=()=>{
+  if(state.editColors.length>=8){toast('Maksimum 8 renk');return}
+  const mid=state.editColors.length>1?
+    state.editColors[Math.floor(state.editColors.length/2)]:'#888888';
+  const midPos=50;
+  state.editColors.push(mid);state.editStops.push(midPos);
+  state.selectedStop=state.editColors.length-1;updateEditor()};
+
+// Type & angle
+document.querySelectorAll('#edTypeRow .ed-type-btn').forEach(b=>{
+  b.onclick=()=>{state.editType=b.dataset.t;updateEditor()}});
+document.getElementById('edAngle').oninput=e=>{state.editAngle=+e.target.value;updateEditor()};
+
+// ─── SIMILAR GRADIENTS ───
+function renderSimilar(refGrad){
+  const refHue=avgHue(refGrad.c);
+  const scored=DB.filter(g=>g.id!==refGrad.id).map(g=>{
+    const hDiff=Math.abs(avgHue(g.c)-refHue);
+    const hueDist=Math.min(hDiff,360-hDiff);
+    const catBonus=g.cat===refGrad.cat?0:30;
+    const clrBonus=g.clr===refGrad.clr?0:20;
+    return{g,score:hueDist+catBonus+clrBonus};
+  }).sort((a,b)=>a.score-b.score).slice(0,8);
+
+  const cont=document.getElementById('edSimilar');cont.innerHTML='';
+  scored.forEach(({g})=>{
+    const card=document.createElement('div');card.className='ed-sim-card';
+    card.style.background=buildCSS(g.c,g.s,g.angle,g.type);
+    card.innerHTML=`<span class="ed-sim-name">${g.n}</span>`;
+    card.onclick=()=>{openEditor(g);window.scrollTo(0,0)};
+    cont.appendChild(card);
+  });
+}
+
+// ─── RANDOM ───
+document.getElementById('randomBtn').onclick=()=>{
+  const pool=getFiltered();
+  if(!pool.length){toast('Bu filtrede gradient yok');return}
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  openEditor(pick);
+};
+
+// ─── CREATE NEW ───
+document.getElementById('createBtn').onclick=()=>{
+  const newGrad={id:-1,n:'Yeni Gradient',c:['#8B5CF6','#06B6D4'],s:[0,100],cat:'custom',clr:'purple',angle:135,type:'linear'};
+  state.editId=-1;state.editName=newGrad.n;
+  state.editColors=[...newGrad.c];state.editStops=[...newGrad.s];
+  state.editAngle=135;state.editType='linear';state.selectedStop=0;
+  document.getElementById('gridView').classList.remove('on');
+  document.getElementById('editorView').classList.add('on');
+  window.scrollTo(0,0);updateEditor();
+  document.getElementById('edSimilar').innerHTML='<p style="color:var(--text4);font-size:.78rem">Renkleri düzenledikçe öneriler güncellenecek.</p>';
+};
+
+// ─── INIT ───
+buildPills();
+renderGrid();
 </script>
 </body>
 </html>
