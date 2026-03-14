@@ -1,962 +1,558 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ColorLab Pro — Gradient & Solid Color Tool</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
---bg:#07070d;--bg2:#0e0e1a;--bg3:#151528;--bg4:#1c1c36;--bg5:#232346;
---border:#282850;--border2:#363668;--text:#f0f0f8;--text2:#9090b0;--text3:#606080;
---accent:#8B5CF6;--accent2:#EC4899;--accent3:#06B6D4;--success:#10B981;
---r:16px;--r2:12px;--r3:8px;
---shadow:0 8px 32px rgba(0,0,0,.5);--shadow2:0 4px 16px rgba(0,0,0,.3);
-}
-html{scroll-behavior:smooth}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:var(--bg2)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+"use client";
 
-/* TOAST */
-#toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);
-background:var(--success);color:#fff;padding:12px 30px;border-radius:50px;font-size:.85rem;font-weight:600;
-z-index:99999;pointer-events:none;transition:.35s cubic-bezier(.4,0,.2,1);opacity:0;
-box-shadow:0 4px 20px rgba(16,185,129,.35)}
-#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+import { useState, useMemo, useCallback } from "react";
 
-/* HEADER */
-header{text-align:center;padding:50px 20px 20px;position:relative}
-header::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);
-width:800px;height:500px;background:radial-gradient(ellipse,rgba(139,92,246,.08),transparent 70%);pointer-events:none}
-.logo{font-size:2.6rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));
--webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-1.5px}
-header p{color:var(--text3);margin-top:6px;font-size:.9rem;font-weight:400}
+// ===================== TYPES =====================
+interface ColorItem { id: string; name: string; hex: string; category: string }
+interface GradientItem { id: string; name: string; colors: string[]; category: string; direction: number }
 
-/* TAB SWITCH */
-.tab-switch{display:flex;justify-content:center;margin:24px auto 0;background:var(--bg2);
-border-radius:50px;padding:4px;border:1px solid var(--border);width:fit-content;gap:4px}
-.tab-btn{padding:11px 28px;border-radius:50px;border:none;background:transparent;
-color:var(--text3);font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;
-transition:all .3s;display:flex;align-items:center;gap:8px}
-.tab-btn:hover{color:var(--text2)}
-.tab-btn.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
-box-shadow:0 4px 16px rgba(139,92,246,.3)}
-.tab-btn .tab-icon{font-size:1rem}
-
-/* SECTIONS */
-.section{display:none;max-width:1440px;margin:0 auto;padding:0 24px}
-.section.active{display:block}
-
-/* TOOLBAR */
-.toolbar{margin-top:24px}
-.filter-section{margin-bottom:14px}
-.filter-label{font-size:.65rem;text-transform:uppercase;letter-spacing:2.5px;color:var(--text3);
-margin-bottom:8px;font-weight:700}
-.filter-row{display:flex;flex-wrap:wrap;gap:6px}
-.fbtn{padding:7px 16px;border-radius:50px;border:1.5px solid var(--border);background:transparent;
-color:var(--text2);font-size:.78rem;font-weight:500;cursor:pointer;font-family:inherit;
-transition:all .25s;white-space:nowrap}
-.fbtn:hover{border-color:var(--accent);color:var(--text)}
-.fbtn.active{background:linear-gradient(135deg,var(--accent),var(--accent2));
-border-color:transparent;color:#fff;font-weight:600;box-shadow:0 3px 12px rgba(139,92,246,.25)}
-.cdot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;
-border:1.5px solid rgba(255,255,255,.12)}
-
-.toolbar-actions{display:flex;gap:10px;align-items:center;margin-top:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.rand-btn{padding:10px 22px;border-radius:50px;border:none;
-background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.82rem;
-font-weight:600;cursor:pointer;font-family:inherit;transition:all .25s;display:flex;align-items:center;gap:7px}
-.rand-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(139,92,246,.35)}
-.res-count{color:var(--text3);font-size:.82rem;margin-left:auto}
-.res-count strong{color:var(--text2)}
-
-/* GRADIENT GRID */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;margin-top:28px}
-.g-card{position:relative;border-radius:var(--r);overflow:hidden;cursor:pointer;
-aspect-ratio:1;transition:all .3s cubic-bezier(.4,0,.2,1);border:1.5px solid var(--border)}
-.g-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 12px 36px rgba(0,0,0,.5);
-border-color:rgba(139,92,246,.3)}
-.g-card .fill{position:absolute;inset:0}
-.g-card .info{position:absolute;bottom:0;left:0;right:0;padding:14px;
-background:linear-gradient(transparent,rgba(0,0,0,.65))}
-.g-card .gname{font-size:.82rem;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}
-.g-card .gmeta{font-size:.65rem;color:rgba(255,255,255,.55);margin-top:3px;display:flex;gap:6px;align-items:center}
-.g-card .dots{display:flex;gap:2px}
-.g-card .dot{width:8px;height:8px;border-radius:50%;border:1px solid rgba(255,255,255,.2)}
-.g-card .badge{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);
-padding:3px 9px;border-radius:20px;font-size:.6rem;color:rgba(255,255,255,.75);font-weight:500}
-
-/* COLOR GRID (Solid) */
-.c-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-top:28px}
-.c-card{border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .3s;
-border:1.5px solid var(--border);display:flex;flex-direction:column}
-.c-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,.4);border-color:rgba(139,92,246,.3)}
-.c-card .swatch{height:120px;width:100%}
-.c-card .cinfo{padding:10px 12px;background:var(--bg2)}
-.c-card .cname{font-size:.78rem;font-weight:600;color:var(--text)}
-.c-card .chex{font-size:.7rem;color:var(--text3);font-family:'SF Mono',monospace;margin-top:2px}
-
-/* LOAD MORE */
-.load-more{text-align:center;padding:40px 20px 60px}
-.lm-btn{padding:12px 36px;border-radius:50px;border:1.5px solid var(--border);background:var(--bg2);
-color:var(--text2);font-size:.85rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .25s}
-.lm-btn:hover{border-color:var(--accent);color:var(--text);background:var(--bg3)}
-
-/* NO RESULTS */
-.no-res{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--text3)}
-.no-res .em{font-size:3rem;margin-bottom:10px}
-
-/* ============ MODAL ============ */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);
-z-index:5000;opacity:0;pointer-events:none;transition:opacity .3s;overflow-y:auto;padding:24px}
-.overlay.open{opacity:1;pointer-events:all}
-.modal{max-width:820px;margin:20px auto;background:var(--bg2);border-radius:20px;
-border:1px solid var(--border);box-shadow:var(--shadow);
-transform:translateY(20px) scale(.97);transition:transform .35s cubic-bezier(.4,0,.2,1);overflow:hidden}
-.overlay.open .modal{transform:translateY(0) scale(1)}
-.m-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:none;
-background:rgba(0,0,0,.5);backdrop-filter:blur(10px);color:#fff;font-size:1.1rem;cursor:pointer;
-display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:3}
-.m-close:hover{background:rgba(0,0,0,.7);transform:scale(1.1)}
-
-.m-preview{width:100%;height:260px;position:relative}
-.m-body{padding:28px}
-.m-title{font-size:1.35rem;font-weight:800;letter-spacing:-.5px}
-.m-sub{color:var(--text3);font-size:.78rem;margin-top:3px;margin-bottom:24px}
-
-.sec-title{font-size:.65rem;text-transform:uppercase;letter-spacing:2px;color:var(--text3);
-margin-bottom:12px;font-weight:700;display:flex;align-items:center;gap:8px;margin-top:24px}
-.sec-title:first-of-type{margin-top:0}
-.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
-
-/* PALETTE */
-.palette{display:flex;flex-wrap:wrap;gap:10px}
-.p-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform .2s}
-.p-item:hover{transform:scale(1.1)}
-.p-swatch{width:48px;height:48px;border-radius:var(--r2);border:2px solid rgba(255,255,255,.08);
-box-shadow:var(--shadow2);transition:border-color .2s}
-.p-item:hover .p-swatch{border-color:rgba(255,255,255,.35)}
-.p-hex{font-size:.62rem;color:var(--text2);font-weight:600;font-family:'SF Mono',monospace}
-
-/* EFFECTS */
-.fx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.fx-card{border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all .25s;
-border:1.5px solid var(--border);position:relative}
-.fx-card:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.4);border-color:rgba(139,92,246,.3)}
-.fx-fill{height:90px;position:relative;overflow:hidden}
-.fx-label{padding:8px;background:var(--bg3);font-size:.7rem;font-weight:600;text-align:center;color:var(--text2)}
-
-/* Shine Animation */
-.shine-effect::after{content:'';position:absolute;inset:0;
-background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.25) 45%,rgba(255,255,255,.4) 50%,rgba(255,255,255,.25) 55%,transparent 70%);
-background-size:200% 100%;animation:shineMove 2.5s ease-in-out infinite}
-@keyframes shineMove{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* Gold Overlay */
-.gold-overlay::after{content:'';position:absolute;inset:0;
-background:linear-gradient(135deg,rgba(255,215,0,.35),rgba(218,165,32,.25),rgba(184,134,11,.3));
-mix-blend-mode:overlay}
-
-/* Silver Overlay */
-.silver-overlay::after{content:'';position:absolute;inset:0;
-background:linear-gradient(135deg,rgba(220,220,240,.3),rgba(192,192,210,.25),rgba(169,169,185,.3));
-mix-blend-mode:overlay}
-
-/* Diamond Overlay */
-.diamond-overlay::after{content:'';position:absolute;inset:0;
-background:repeating-conic-gradient(rgba(255,255,255,.06) 0% 25%,transparent 0% 50%) 0 0/20px 20px,
-linear-gradient(135deg,rgba(200,200,255,.2),rgba(255,200,255,.15),rgba(200,255,255,.2));
-mix-blend-mode:overlay}
-
-/* ELEMENT PREVIEW */
-.elem-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.elem-box{background:var(--bg3);border-radius:var(--r2);padding:20px;flex:1;min-width:130px;
-display:flex;flex-direction:column;align-items:center;gap:8px;border:1px solid var(--border)}
-.elem-label{font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);font-weight:700}
-.elem-btn{padding:10px 24px;border-radius:50px;border:none;color:#fff;font-weight:700;font-size:.82rem;
-font-family:inherit;cursor:default;letter-spacing:.5px;text-shadow:0 1px 2px rgba(0,0,0,.3)}
-.elem-text{font-size:1.6rem;font-weight:900;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
-background-clip:text;letter-spacing:-1px}
-.elem-circle{width:56px;height:56px;border-radius:50%;box-shadow:var(--shadow2)}
-.elem-card-demo{width:100%;height:60px;border-radius:var(--r3);box-shadow:var(--shadow2)}
-
-/* ANGLE */
-.angle-row{display:flex;align-items:center;gap:12px}
-.angle-slider{flex:1;-webkit-appearance:none;height:5px;border-radius:3px;background:var(--bg);outline:none;cursor:pointer}
-.angle-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
-background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;border:2px solid #fff;
-box-shadow:0 2px 8px rgba(0,0,0,.3)}
-.angle-val{background:var(--bg3);padding:5px 12px;border-radius:var(--r3);font-size:.78rem;font-weight:600;
-min-width:48px;text-align:center;border:1px solid var(--border)}
-.angle-presets{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
-.ap{padding:5px 11px;border-radius:var(--r3);border:1px solid var(--border);background:transparent;
-color:var(--text3);font-size:.68rem;cursor:pointer;font-family:inherit;transition:all .2s;font-weight:500}
-.ap:hover,.ap.active{background:var(--bg4);color:var(--text);border-color:var(--accent)}
-
-/* CSS BLOCK */
-.css-block{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:14px;
-position:relative;margin-top:4px}
-.css-code{font-family:'SF Mono','Fira Code',monospace;font-size:.75rem;color:var(--accent);
-word-break:break-all;line-height:1.7;padding-right:70px}
-.css-copy{position:absolute;top:10px;right:10px;padding:6px 14px;border-radius:var(--r3);
-border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:.68rem;
-cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s}
-.css-copy:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-
-/* SUGGESTIONS */
-.sug-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
-.sug-tab{padding:7px 14px;border-radius:50px;border:1px solid var(--border);background:transparent;
-color:var(--text3);font-size:.72rem;cursor:pointer;font-family:inherit;font-weight:500;transition:all .2s}
-.sug-tab:hover,.sug-tab.active{background:var(--bg4);color:var(--text);border-color:var(--accent)}
-.sug-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
-.sug-card{border-radius:var(--r3);height:72px;cursor:pointer;transition:all .2s;
-border:1.5px solid var(--border);overflow:hidden;position:relative}
-.sug-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.4);border-color:rgba(139,92,246,.3)}
-.sug-card .sug-name{position:absolute;bottom:0;left:0;right:0;padding:5px 8px;
-background:linear-gradient(transparent,rgba(0,0,0,.6));font-size:.58rem;color:rgba(255,255,255,.8);font-weight:500}
-.ver-row{display:flex;gap:10px;margin-bottom:8px;align-items:center}
-.ver-preview{flex:1;height:44px;border-radius:var(--r3);border:1px solid var(--border);cursor:pointer;transition:all .2s}
-.ver-preview:hover{transform:scale(1.02);border-color:rgba(139,92,246,.3)}
-.ver-label{font-size:.72rem;color:var(--text2);min-width:75px;font-weight:500}
-.ver-copy{padding:5px 11px;border-radius:var(--r3);border:1px solid var(--border);background:transparent;
-color:var(--text3);font-size:.65rem;cursor:pointer;font-family:inherit;transition:all .2s}
-.ver-copy:hover{background:var(--accent);color:#fff;border-color:transparent}
-
-/* ===== SOLID COLOR MODAL ===== */
-.cm-swatch{width:100%;height:200px;position:relative}
-.cm-body{padding:28px}
-.cm-vals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
-.cm-val{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:12px;
-cursor:pointer;transition:all .2s;text-align:center}
-.cm-val:hover{border-color:var(--accent);background:var(--bg4)}
-.cm-val .cv-label{font-size:.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);font-weight:700;margin-bottom:4px}
-.cm-val .cv-code{font-size:.8rem;font-weight:600;font-family:'SF Mono',monospace;color:var(--text)}
-
-.shade-row{display:flex;gap:6px;margin-bottom:6px}
-.shade-item{flex:1;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px}
-.shade-item:hover{transform:scale(1.08)}
-.shade-sw{height:36px;width:100%;border-radius:var(--r3);border:1.5px solid rgba(255,255,255,.06);transition:border-color .2s}
-.shade-item:hover .shade-sw{border-color:rgba(255,255,255,.3)}
-.shade-hex{font-size:.55rem;color:var(--text3);font-family:'SF Mono',monospace;font-weight:600}
-
-.harmony-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.harm-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:12px;
-cursor:pointer;transition:all .2s}
-.harm-card:hover{border-color:var(--accent)}
-.harm-name{font-size:.7rem;font-weight:600;color:var(--text2);margin-bottom:8px}
-.harm-colors{display:flex;gap:4px}
-.harm-c{flex:1;height:30px;border-radius:6px;border:1px solid rgba(255,255,255,.06);position:relative}
-.harm-c:hover::after{content:attr(data-hex);position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);
-font-size:.55rem;color:var(--text2);background:var(--bg);padding:2px 6px;border-radius:4px;white-space:nowrap;
-border:1px solid var(--border);z-index:2}
-
-/* SIMILAR COLORS */
-.sim-colors{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
-.sim-c{border-radius:var(--r3);overflow:hidden;cursor:pointer;transition:all .2s;border:1.5px solid var(--border)}
-.sim-c:hover{transform:translateY(-2px);border-color:rgba(139,92,246,.3)}
-.sim-c .sc-sw{height:60px}
-.sim-c .sc-info{padding:6px 8px;background:var(--bg2)}
-.sim-c .sc-name{font-size:.6rem;font-weight:600;color:var(--text)}
-.sim-c .sc-hex{font-size:.55rem;color:var(--text3);font-family:monospace}
-
-/* FOOTER */
-footer{text-align:center;padding:30px;color:var(--text3);font-size:.72rem;border-top:1px solid var(--border);margin-top:20px}
-
-/* ANIMATIONS */
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.g-card,.c-card{animation:fadeUp .4s ease backwards}
-
-/* RESPONSIVE */
-@media(max-width:768px){
-.logo{font-size:2rem}
-header{padding:36px 16px 16px}
-.section{padding:0 16px}
-.grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.c-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
-.m-preview,.cm-swatch{height:180px}
-.m-body,.cm-body{padding:20px}
-.fx-grid{grid-template-columns:repeat(2,1fr)}
-.elem-row{gap:10px}
-.elem-box{min-width:100px;padding:14px}
-.cm-vals{grid-template-columns:1fr}
-.tab-btn{padding:9px 18px;font-size:.78rem}
-}
-@media(max-width:480px){
-.grid{grid-template-columns:repeat(2,1fr);gap:10px}
-.c-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-.fbtn{padding:5px 10px;font-size:.7rem}
-.tab-btn{padding:8px 14px;font-size:.72rem}
-.harmony-grid{grid-template-columns:1fr}
-}
-</style>
-</head>
-<body>
-
-<div id="toast"></div>
-
-<header>
-<div class="logo">ColorLab Pro</div>
-<p>Gradient & renk keşfi için profesyonel tasarım aracı</p>
-<div class="tab-switch">
-<button class="tab-btn active" onclick="switchTab('gradient')"><span class="tab-icon">🎨</span> Gradientler</button>
-<button class="tab-btn" onclick="switchTab('solid')"><span class="tab-icon">🔵</span> Düz Renkler</button>
-</div>
-</header>
-
-<!-- ======= GRADIENT SECTION ======= -->
-<section class="section active" id="gradientSection">
-<div class="toolbar">
-<div class="filter-section">
-<div class="filter-label">📁 Kategori</div>
-<div class="filter-row" id="gCatFilters"></div>
-</div>
-<div class="filter-section">
-<div class="filter-label">🎨 Renk</div>
-<div class="filter-row" id="gColorFilters"></div>
-</div>
-<div class="toolbar-actions">
-<button class="rand-btn" onclick="randomGradient()">🎲 Rastgele</button>
-<span class="res-count"><strong id="gCount">0</strong> gradient</span>
-</div>
-</div>
-<div class="grid" id="gGrid"></div>
-<div class="load-more" id="gLoadWrap"><button class="lm-btn" onclick="gLoadMore()">Daha Fazla ↓</button></div>
-</section>
-
-<!-- ======= SOLID COLOR SECTION ======= -->
-<section class="section" id="solidSection">
-<div class="toolbar">
-<div class="filter-section">
-<div class="filter-label">📁 Kategori</div>
-<div class="filter-row" id="sCatFilters"></div>
-</div>
-<div class="filter-section">
-<div class="filter-label">🎨 Renk</div>
-<div class="filter-row" id="sColorFilters"></div>
-</div>
-<div class="toolbar-actions">
-<button class="rand-btn" onclick="randomColor()">🎲 Rastgele</button>
-<span class="res-count"><strong id="sCount">0</strong> renk</span>
-</div>
-</div>
-<div class="c-grid" id="sGrid"></div>
-<div class="load-more" id="sLoadWrap"><button class="lm-btn" onclick="sLoadMore()">Daha Fazla ↓</button></div>
-</section>
-
-<!-- ======= GRADIENT MODAL ======= -->
-<div class="overlay" id="gOverlay" onclick="closeGModal(event)">
-<div class="modal" onclick="event.stopPropagation()">
-<div class="m-preview" id="gPreview"><button class="m-close" onclick="closeGModal()">✕</button></div>
-<div class="m-body">
-<div class="m-title" id="gTitle"></div>
-<div class="m-sub" id="gSub"></div>
-
-<div class="sec-title">🎨 Renk Paleti — tıkla & kopyala</div>
-<div class="palette" id="gPalette"></div>
-
-<div class="sec-title">✨ Özel Efektler</div>
-<div class="fx-grid" id="gEffects"></div>
-
-<div class="sec-title">📱 Element Önizleme</div>
-<div class="elem-row" id="gElements"></div>
-
-<div class="sec-title">📐 Açı Kontrolü</div>
-<div class="angle-row">
-<input type="range" class="angle-slider" id="gAngle" min="0" max="360" value="135" oninput="updateGAngle(this.value)">
-<div class="angle-val" id="gAngleVal">135°</div>
-</div>
-<div class="angle-presets" id="gAnglePresets"></div>
-
-<div class="sec-title">📋 CSS Kodu</div>
-<div class="css-block">
-<code class="css-code" id="gCSS"></code>
-<button class="css-copy" onclick="copyText(document.getElementById('gCSS').textContent)">Kopyala</button>
-</div>
-
-<div class="sec-title">💡 Öneriler</div>
-<div class="sug-tabs" id="gSugTabs">
-<button class="sug-tab active" onclick="gSugSwitch('similar',this)">Benzer</button>
-<button class="sug-tab" onclick="gSugSwitch('lighter',this)">Daha Açık</button>
-<button class="sug-tab" onclick="gSugSwitch('darker',this)">Daha Koyu</button>
-<button class="sug-tab" onclick="gSugSwitch('tones',this)">Renk Harmonisi</button>
-</div>
-<div id="gSugContent"></div>
-</div>
-</div>
-</div>
-
-<!-- ======= SOLID COLOR MODAL ======= -->
-<div class="overlay" id="sOverlay" onclick="closeSModal(event)">
-<div class="modal" onclick="event.stopPropagation()">
-<div class="cm-swatch" id="sSwatch"><button class="m-close" onclick="closeSModal()">✕</button></div>
-<div class="cm-body">
-<div class="m-title" id="sTitle"></div>
-<div class="m-sub" id="sSub"></div>
-
-<div class="sec-title">📋 Renk Değerleri — tıkla & kopyala</div>
-<div class="cm-vals" id="sVals"></div>
-
-<div class="sec-title">☀️ Tint (Açık Tonlar)</div>
-<div class="shade-row" id="sTints"></div>
-
-<div class="sec-title">🌙 Shade (Koyu Tonlar)</div>
-<div class="shade-row" id="sShades"></div>
-
-<div class="sec-title">🔗 Renk Harmonileri</div>
-<div class="harmony-grid" id="sHarmonies"></div>
-
-<div class="sec-title">🎯 Benzer Renkler</div>
-<div class="sim-colors" id="sSimilar"></div>
-</div>
-</div>
-</div>
-
-<footer>ColorLab Pro — Tasarımcılar için profesyonel renk & gradient aracı ✦</footer>
-
-<script>
-// ===================== DATA =====================
-
-const GR=(id,name,colors,angle,cats,tags)=>({id,name,colors,angle,categories:cats,colorTags:tags});
-const SC=(id,name,hex,cat,tag)=>({id,name,hex,category:cat,colorTag:tag});
-
-const gradients=[
-// PASTEL
-GR(1,"Lavender Dream",["#E8D5F5","#F5D5E8","#D5E8F5"],135,["pastel"],["purple","pink","blue"]),
-GR(2,"Cotton Candy",["#FFD1DC","#E8D5F5"],90,["pastel"],["pink","purple"]),
-GR(3,"Mint Breeze",["#C1F0DB","#B5E8F7"],120,["pastel"],["green","blue"]),
-GR(4,"Peach Blossom",["#FFE5D5","#FFD1DC","#E8D5F5"],135,["pastel"],["orange","pink","purple"]),
-GR(5,"Baby Blue",["#BAE1FF","#BAFFC9"],90,["pastel"],["blue","green"]),
-GR(6,"Lilac Mist",["#DCD0FF","#F0C0E8"],45,["pastel"],["purple","pink"]),
-GR(7,"Rose Quartz",["#FFD1DC","#FFE5D5","#FFF9E6"],180,["pastel"],["pink","orange"]),
-GR(8,"Soft Meadow",["#D5F5D5","#D5F5E8","#D5E8F5"],135,["pastel"],["green","blue"]),
-GR(9,"Vanilla Sky",["#FFF5E5","#FFE5F0","#E5F0FF"],120,["pastel"],["orange","pink","blue"]),
-GR(10,"Pastel Rainbow",["#FFD1DC","#FFE5D5","#FFFFD5","#D5F5D5","#D5E8F5"],90,["pastel"],["pink","orange","yellow","green","blue"]),
-// NEON
-GR(11,"Electric Violet",["#8B00FF","#FF00FF"],135,["neon"],["purple","pink"]),
-GR(12,"Cyber Punk",["#FF0080","#7B2DFF","#00FFFF"],135,["neon"],["pink","purple","blue"]),
-GR(13,"Toxic Green",["#39FF14","#00FF7F"],90,["neon"],["green"]),
-GR(14,"Hot Fusion",["#FF0080","#FF4500"],45,["neon"],["pink","orange"]),
-GR(15,"Neon Sunset",["#FF0066","#FF6600","#FFFF00"],135,["neon"],["pink","orange","yellow"]),
-GR(16,"Digital Blue",["#0055FF","#00DDFF"],90,["neon"],["blue"]),
-GR(17,"Plasma",["#FF00FF","#8000FF","#4400FF"],180,["neon"],["pink","purple","blue"]),
-GR(18,"Laser Lime",["#AAFF00","#00FF66"],135,["neon"],["yellow","green"]),
-GR(19,"Neon Night",["#FF0080","#8000FF","#0000FF","#00FFFF"],90,["neon"],["pink","purple","blue"]),
-GR(20,"Radioactive",["#00FF41","#CCFF00","#FF6600"],135,["neon"],["green","yellow","orange"]),
-// DARK
-GR(21,"Midnight",["#0D0D2B","#1A1A3E","#16213E"],135,["dark"],["blue","purple"]),
-GR(22,"Dark Ocean",["#0D1B2A","#1B2838","#2C3E50"],180,["dark"],["blue"]),
-GR(23,"Charcoal Dream",["#1A1A2E","#16213E","#0F3460"],135,["dark"],["blue","purple"]),
-GR(24,"Dark Forest",["#0A1F0A","#1A3C1A","#0D1B2A"],120,["dark"],["green","blue"]),
-GR(25,"Eclipse",["#1A0A2E","#2E0A4E","#4A0A6E"],180,["dark"],["purple"]),
-GR(26,"Obsidian",["#0D0D0D","#1A1A1A","#2D2D2D"],135,["dark"],["purple"]),
-GR(27,"Deep Amethyst",["#1A002E","#2E004E","#0A002E"],90,["dark"],["purple"]),
-GR(28,"Black Hole",["#000000","#0D0021","#1A0042"],135,["dark"],["purple","blue"]),
-GR(29,"Storm",["#1A1A2E","#2C3E50","#34495E"],90,["dark"],["blue"]),
-GR(30,"Dark Cherry",["#2E0A1A","#4A0A2E","#1A0A2E"],135,["dark"],["red","purple"]),
-// WARM
-GR(31,"Sunrise",["#FF6B35","#FF9A56","#FFD93D"],135,["warm"],["orange","yellow"]),
-GR(32,"Golden Hour",["#FFD93D","#FFB347","#FF9A56"],90,["warm"],["yellow","orange"]),
-GR(33,"Autumn Leaves",["#FF6B35","#D4380D","#8B4513"],135,["warm"],["orange","red"]),
-GR(34,"Fire Storm",["#FF0000","#FF4500","#FF8C00","#FFD700"],90,["warm"],["red","orange","yellow"]),
-GR(35,"Coral Reef",["#FF6B6B","#FF8E8E","#FFB4B4"],135,["warm"],["red","pink"]),
-GR(36,"Warm Peach",["#FFCBA4","#FF9A76","#FF6B6B"],90,["warm"],["orange","red"]),
-GR(37,"Terracotta",["#E2725B","#CD5C5C","#B22222"],135,["warm"],["red","orange"]),
-GR(38,"Amber Glow",["#FFBF00","#FF8C00","#FF6600"],45,["warm"],["yellow","orange"]),
-GR(39,"Mango Tango",["#FF8243","#FFB347","#FFD700","#FF6347"],135,["warm"],["orange","yellow","red"]),
-GR(40,"Cinnamon",["#D2691E","#A0522D","#8B4513"],180,["warm"],["orange"]),
-// COLD
-GR(41,"Arctic",["#E8F4FD","#B8D8E8","#7FB8D8"],135,["cold"],["blue"]),
-GR(42,"Glacier",["#A8D8EA","#7FC8DB","#48B1BF"],180,["cold"],["blue"]),
-GR(43,"Winter Sky",["#89CFF0","#5B9BD5","#2E75B6"],90,["cold"],["blue"]),
-GR(44,"Ice Crystal",["#E0F7FA","#B2EBF2","#80DEEA"],135,["cold"],["blue"]),
-GR(45,"Frozen Lake",["#E8EAF6","#C5CAE9","#9FA8DA"],90,["cold"],["blue","purple"]),
-GR(46,"Cool Mint",["#B2DFDB","#80CBC4","#4DB6AC"],135,["cold"],["green","blue"]),
-GR(47,"Nordic Frost",["#E3F2FD","#90CAF9","#42A5F5"],90,["cold"],["blue"]),
-GR(48,"Polar Aurora",["#2C3E50","#3498DB","#89CFF0","#A8E6CF"],135,["cold"],["blue","green"]),
-GR(49,"Steel Blue",["#B0BEC5","#78909C","#546E7A"],180,["cold"],["blue"]),
-GR(50,"Crystal",["#E8EAF6","#C5CAE9","#7986CB","#5C6BC0"],90,["cold"],["blue","purple"]),
-// SUNSET
-GR(51,"California",["#FF6B6B","#FF9A56","#FFD93D","#6BCB77"],135,["sunset"],["red","orange","yellow","green"]),
-GR(52,"Tropical Sunset",["#FF0080","#FF6600","#FFCC00"],90,["sunset"],["pink","orange","yellow"]),
-GR(53,"Purple Horizon",["#7B2D8E","#E74C8B","#FF9A56","#FFD93D"],135,["sunset"],["purple","pink","orange","yellow"]),
-GR(54,"Ocean Sunset",["#FF6B6B","#FF9A56","#48B1BF"],180,["sunset"],["red","orange","blue"]),
-GR(55,"Desert Dusk",["#FF6B35","#CD5C5C","#4A0E2E"],135,["sunset"],["orange","red","purple"]),
-GR(56,"Pink Sky",["#FF6B9D","#C44569","#6C3483","#2C3E50"],90,["sunset"],["pink","red","purple","blue"]),
-GR(57,"Warm Horizon",["#F093FB","#F5576C","#FF9A56"],135,["sunset"],["pink","red","orange"]),
-GR(58,"Dusk to Dawn",["#2C3E50","#E74C3C","#F39C12","#F1C40F"],90,["sunset"],["blue","red","orange","yellow"]),
-// OCEAN
-GR(59,"Deep Ocean",["#006994","#00496B","#003049"],180,["ocean"],["blue"]),
-GR(60,"Tropical Water",["#48B1BF","#06BEB6","#A8E6CF"],135,["ocean"],["blue","green"]),
-GR(61,"Sea Foam",["#A8E6CF","#88D8B0","#6BCB77"],90,["ocean"],["green"]),
-GR(62,"Tidal Wave",["#0077B6","#00B4D8","#90E0EF"],90,["ocean"],["blue"]),
-GR(63,"Aquamarine",["#7FFFD4","#40E0D0","#008B8B"],135,["ocean"],["green","blue"]),
-GR(64,"Pacific",["#003049","#005F73","#0A9396","#94D2BD"],90,["ocean"],["blue","green"]),
-GR(65,"Lagoon",["#006D77","#83C5BE","#EDF6F9"],135,["ocean"],["blue","green"]),
-// SPECIAL MULTI-COLOR
-GR(66,"Aurora Borealis",["#00FF87","#60EFFF","#8B5CF6","#FF00FF"],135,["neon","cold"],["green","blue","purple","pink"]),
-GR(67,"Unicorn",["#FF6FD8","#CD6DFF","#7B68EE","#00BFFF","#00FF7F"],90,["neon"],["pink","purple","blue","green"]),
-GR(68,"Galaxy",["#0D0221","#260041","#5C0067","#B80068","#FF4F00"],135,["dark","sunset"],["purple","pink","orange"]),
-GR(69,"Northern Lights",["#00C9FF","#92FE9D","#FCFF9E"],90,["neon","cold"],["blue","green","yellow"]),
-GR(70,"Candy Shop",["#FF6FD8","#FFBE76","#BADC58","#7ED6DF"],120,["pastel"],["pink","orange","green","blue"]),
-];
-
-const solidColors=[
-// PASTEL
-SC(1,"Pastel Pink","#FFD1DC","pastel","pink"),
-SC(2,"Pastel Lavender","#E8D5F5","pastel","purple"),
-SC(3,"Pastel Blue","#AEC6CF","pastel","blue"),
-SC(4,"Pastel Green","#B5EAD7","pastel","green"),
-SC(5,"Pastel Yellow","#FDFD96","pastel","yellow"),
-SC(6,"Pastel Peach","#FFDAB9","pastel","orange"),
-SC(7,"Pastel Mint","#AAF0D1","pastel","green"),
-SC(8,"Pastel Coral","#FFB7B2","pastel","red"),
-SC(9,"Baby Blue","#89CFF0","pastel","blue"),
-SC(10,"Pastel Lilac","#B19CD9","pastel","purple"),
-SC(11,"Pastel Rose","#FFE4E1","pastel","pink"),
-SC(12,"Pastel Sky","#BFEFFF","pastel","blue"),
-// NEON
-SC(13,"Neon Pink","#FF6EC7","neon","pink"),
-SC(14,"Neon Green","#39FF14","neon","green"),
-SC(15,"Neon Blue","#4D4DFF","neon","blue"),
-SC(16,"Neon Yellow","#FFFF00","neon","yellow"),
-SC(17,"Neon Orange","#FF6600","neon","orange"),
-SC(18,"Neon Cyan","#00FFFF","neon","blue"),
-SC(19,"Neon Magenta","#FF00FF","neon","pink"),
-SC(20,"Electric Lime","#CCFF00","neon","green"),
-SC(21,"Hot Pink","#FF69B4","neon","pink"),
-SC(22,"Neon Red","#FF3131","neon","red"),
-// METALLIC
-SC(23,"Gold","#FFD700","metallic","yellow"),
-SC(24,"Silver","#C0C0C0","metallic","blue"),
-SC(25,"Bronze","#CD7F32","metallic","orange"),
-SC(26,"Copper","#B87333","metallic","orange"),
-SC(27,"Rose Gold","#B76E79","metallic","pink"),
-SC(28,"Platinum","#E5E4E2","metallic","blue"),
-SC(29,"Champagne","#F7E7CE","metallic","yellow"),
-SC(30,"Antique Gold","#CFB53B","metallic","yellow"),
-// EARTH
-SC(31,"Terracotta","#E2725B","earth","orange"),
-SC(32,"Olive","#808000","earth","green"),
-SC(33,"Sage","#BCB88A","earth","green"),
-SC(34,"Sand","#C2B280","earth","yellow"),
-SC(35,"Forest Green","#228B22","earth","green"),
-SC(36,"Rust","#B7410E","earth","red"),
-SC(37,"Clay","#B66A50","earth","orange"),
-SC(38,"Moss","#8A9A5B","earth","green"),
-SC(39,"Sienna","#A0522D","earth","orange"),
-SC(40,"Bark","#6B4226","earth","orange"),
-// CLASSIC
-SC(41,"True Red","#FF0000","classic","red"),
-SC(42,"Royal Blue","#4169E1","classic","blue"),
-SC(43,"Emerald","#50C878","classic","green"),
-SC(44,"Deep Purple","#800080","classic","purple"),
-SC(45,"Navy","#000080","classic","blue"),
-SC(46,"Crimson","#DC143C","classic","red"),
-SC(47,"Teal","#008080","classic","blue"),
-SC(48,"Indigo","#4B0082","classic","purple"),
-SC(49,"Vermillion","#E34234","classic","red"),
-SC(50,"Cobalt","#0047AB","classic","blue"),
-// NEUTRAL
-SC(51,"Charcoal","#36454F","neutral","blue"),
-SC(52,"Ivory","#FFFFF0","neutral","yellow"),
-SC(53,"Slate","#708090","neutral","blue"),
-SC(54,"Ash","#B2BEB5","neutral","green"),
-SC(55,"Graphite","#383838","neutral","purple"),
-SC(56,"Linen","#FAF0E6","neutral","orange"),
-SC(57,"Pearl","#FDEEF4","neutral","pink"),
-SC(58,"Steel","#71797E","neutral","blue"),
-// JEWEL
-SC(59,"Ruby","#E0115F","jewel","red"),
-SC(60,"Sapphire","#0F52BA","jewel","blue"),
-SC(61,"Amethyst","#9966CC","jewel","purple"),
-SC(62,"Topaz","#FFC87C","jewel","yellow"),
-SC(63,"Garnet","#733635","jewel","red"),
-SC(64,"Turquoise","#30D5C8","jewel","blue"),
-SC(65,"Onyx","#353839","jewel","purple"),
-SC(66,"Jade","#00A86B","jewel","green"),
-SC(67,"Opal","#A8C3BC","jewel","blue"),
-SC(68,"Citrine","#E4D00A","jewel","yellow"),
-];
-
-// ===================== CATEGORIES =====================
-
-const gCats=[
-{id:"all",label:"Tümü",icon:"✦"},{id:"pastel",label:"Pastel",icon:"🌸"},
-{id:"neon",label:"Neon",icon:"⚡"},{id:"dark",label:"Koyu",icon:"🌑"},
-{id:"warm",label:"Sıcak",icon:"🔥"},{id:"cold",label:"Soğuk",icon:"❄️"},
-{id:"sunset",label:"Gün Batımı",icon:"🌅"},{id:"ocean",label:"Okyanus",icon:"🌊"}
-];
-
-const sCats=[
-{id:"all",label:"Tümü",icon:"✦"},{id:"pastel",label:"Pastel",icon:"🌸"},
-{id:"neon",label:"Neon",icon:"⚡"},{id:"metallic",label:"Metalik",icon:"🪙"},
-{id:"earth",label:"Toprak",icon:"🌿"},{id:"classic",label:"Klasik",icon:"🎯"},
-{id:"neutral",label:"Nötr",icon:"⚪"},{id:"jewel",label:"Mücevher",icon:"💎"}
-];
-
-const colorOpts=[
-{id:"all",label:"Tümü",hex:null},{id:"red",label:"Kırmızı",hex:"#EF4444"},
-{id:"orange",label:"Turuncu",hex:"#F97316"},{id:"yellow",label:"Sarı",hex:"#EAB308"},
-{id:"green",label:"Yeşil",hex:"#22C55E"},{id:"blue",label:"Mavi",hex:"#3B82F6"},
-{id:"purple",label:"Mor",hex:"#8B5CF6"},{id:"pink",label:"Pembe",hex:"#EC4899"}
-];
-
-// ===================== STATE =====================
-
-let st={
-gCat:"all",gColor:"all",gDisp:12,gFiltered:[],gEdit:null,gSugTab:"similar",
-sCat:"all",sColor:"all",sDisp:16,sFiltered:[],sEdit:null,
-tab:"gradient"
+// ===================== UTILITIES =====================
+const hexToRgb = (hex: string) => {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r ? { r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16) } : { r: 0, g: 0, b: 0 };
 };
+const rgbToHex = (r: number, g: number, b: number) =>
+  "#" + [r, g, b].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0")).join("").toUpperCase();
+const darken = (hex: string, a: number) => { const { r, g, b } = hexToRgb(hex); return rgbToHex(r * (1 - a), g * (1 - a), b * (1 - a)); };
+const lighten = (hex: string, a: number) => { const { r, g, b } = hexToRgb(hex); return rgbToHex(r + (255 - r) * a, g + (255 - g) * a, b + (255 - b) * a); };
+const getTones = (hex: string) => [darken(hex, 0.4), darken(hex, 0.25), darken(hex, 0.12), hex, lighten(hex, 0.15), lighten(hex, 0.3), lighten(hex, 0.5)];
+const gCSS = (c: string[], d: number) => `linear-gradient(${d}deg, ${c.join(", ")})`;
+const getHue = (hex: string) => {
+  let { r, g, b } = hexToRgb(hex); r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0;
+  if (mx !== mn) { const d = mx - mn; h = mx === r ? ((g - b) / d + (g < b ? 6 : 0)) / 6 : mx === g ? ((b - r) / d + 2) / 6 : ((r - g) / d + 4) / 6; }
+  return h * 360;
+};
+const getLum = (hex: string) => { const { r, g, b } = hexToRgb(hex); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
 
-// ===================== COLOR UTILS =====================
-
-function hexToRGB(h){h=h.replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-return{r:parseInt(h.substr(0,2),16),g:parseInt(h.substr(2,2),16),b:parseInt(h.substr(4,2),16)}}
-
-function rgbToHex(r,g,b){return'#'+[r,g,b].map(x=>{
-const h=Math.max(0,Math.min(255,Math.round(x))).toString(16);return h.length===1?'0'+h:h}).join('')}
-
-function hexToHSL(hex){let{r,g,b}=hexToRGB(hex);r/=255;g/=255;b/=255;
-const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;
-if(mx===mn){h=s=0}else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);
-switch(mx){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;case b:h=((r-g)/d+4)/6;break}}
-return{h:h*360,s:s*100,l:l*100}}
-
-function hslToHex(h,s,l){h/=360;s/=100;l/=100;let r,g,b;
-if(s===0){r=g=b=l}else{
-const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;
-if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p};
-const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;
-r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3)}
-return rgbToHex(r*255,g*255,b*255)}
-
-function adjLight(hex,amt){let{h,s,l}=hexToHSL(hex);l=Math.max(0,Math.min(100,l+amt));return hslToHex(h,s,l)}
-
-function gradCSS(c,a){return`linear-gradient(${a}deg, ${c.join(', ')})`}
-function gradFull(c,a){return`background: ${gradCSS(c,a)};`}
-
-function goldize(hex){let{h,s,l}=hexToHSL(hex);
-return hslToHex(43+(h%15),Math.min(95,s*.5+40),Math.min(85,Math.max(30,l*.6+25)))}
-function silverize(hex){let{h,s,l}=hexToHSL(hex);
-return hslToHex(h,s*.12,Math.min(90,Math.max(35,l*.4+45)))}
-function diamondize(hex){let{h,s,l}=hexToHSL(hex);
-return hslToHex(h,Math.min(60,s*.35+15),Math.min(93,Math.max(60,l*.3+62)))}
-
-function rgbStr(hex){const{r,g,b}=hexToRGB(hex);return`rgb(${r}, ${g}, ${b})`}
-function hslStr(hex){const{h,s,l}=hexToHSL(hex);return`hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%)`}
-
-function contrastColor(hex){const{r,g,b}=hexToRGB(hex);return(r*299+g*587+b*114)/1000>128?'#000000':'#FFFFFF'}
-
-// ===================== TAB SWITCH =====================
-
-function switchTab(tab){
-st.tab=tab;
-document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===(tab==='gradient'?0:1)));
-document.getElementById('gradientSection').classList.toggle('active',tab==='gradient');
-document.getElementById('solidSection').classList.toggle('active',tab==='solid');
-}
-
-// ===================== TOAST & COPY =====================
-
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200)}
-
-function copyText(text){navigator.clipboard.writeText(text).then(()=>toast('📋 Kopyalandı: '+text.substring(0,50)))
-.catch(()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;opacity:0';
-document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
-toast('📋 Kopyalandı!')})}
-
-// ===================== GRADIENT SECTION =====================
-
-function renderGFilters(){
-document.getElementById('gCatFilters').innerHTML=gCats.map(c=>
-`<button class="fbtn ${st.gCat===c.id?'active':''}" onclick="st.gCat='${c.id}';renderGFilters();filterG()">${c.icon} ${c.label}</button>`).join('');
-document.getElementById('gColorFilters').innerHTML=colorOpts.map(c=>
-`<button class="fbtn ${st.gColor===c.id?'active':''}" onclick="st.gColor='${c.id}';renderGFilters();filterG()">
-${c.hex?`<span class="cdot" style="background:${c.hex}"></span>`:' ✦'} ${c.label}</button>`).join('');
-}
-
-function filterG(){
-let r=[...gradients];
-if(st.gCat!=='all')r=r.filter(g=>g.categories.includes(st.gCat));
-if(st.gColor!=='all')r=r.filter(g=>g.colorTags.includes(st.gColor));
-st.gFiltered=r;st.gDisp=12;
-document.getElementById('gCount').textContent=r.length;
-renderGGrid();
-}
-
-function renderGGrid(){
-const grid=document.getElementById('gGrid');
-const show=st.gFiltered.slice(0,st.gDisp);
-if(!show.length){grid.innerHTML='<div class="no-res"><div class="em">🔍</div><p>Sonuç bulunamadı</p></div>';
-document.getElementById('gLoadWrap').style.display='none';return}
-grid.innerHTML=show.map((g,i)=>`
-<div class="g-card" onclick="openGModal(${g.id})" style="animation-delay:${Math.min(i*.03,.35)}s">
-<div class="fill" style="background:${gradCSS(g.colors,g.angle)}"></div>
-<div class="badge">${g.colors.length} renk</div>
-<div class="info"><div class="gname">${g.name}</div>
-<div class="gmeta"><div class="dots">${g.colors.map(c=>`<span class="dot" style="background:${c}"></span>`).join('')}</div>
-<span>${g.angle}°</span></div></div></div>`).join('');
-const w=document.getElementById('gLoadWrap');
-if(st.gDisp>=st.gFiltered.length){w.style.display='none'}else{w.style.display='block'}
-}
-
-function gLoadMore(){st.gDisp+=12;renderGGrid()}
-
-// ===================== GRADIENT MODAL =====================
-
-function openGModal(id){
-const g=gradients.find(x=>x.id===id);if(!g)return;
-st.gEdit=JSON.parse(JSON.stringify(g));st.gSugTab='similar';
-renderGModal();
-document.getElementById('gOverlay').classList.add('open');document.body.style.overflow='hidden';
-}
-
-function closeGModal(e){
-if(e&&e.target!==document.getElementById('gOverlay'))return;
-document.getElementById('gOverlay').classList.remove('open');document.body.style.overflow='';st.gEdit=null}
-
-function renderGModal(){
-const g=st.gEdit;if(!g)return;
-const css=gradCSS(g.colors,g.angle);
-
-// Preview
-document.getElementById('gPreview').style.background=css;
-
-// Title
-document.getElementById('gTitle').textContent=g.name;
-document.getElementById('gSub').textContent=`${g.categories.join(', ')} • ${g.colors.length} renk • ${g.angle}°`;
-
-// Palette
-document.getElementById('gPalette').innerHTML=g.colors.map(c=>`
-<div class="p-item" onclick="copyText('${c.toUpperCase()}')" title="Kopyala">
-<div class="p-swatch" style="background:${c}"></div>
-<span class="p-hex">${c.toUpperCase()}</span></div>`).join('');
-
-// Effects
-const goldColors=g.colors.map(goldize);
-const silverColors=g.colors.map(silverize);
-const diamondColors=g.colors.map(diamondize);
-
-document.getElementById('gEffects').innerHTML=`
-<div class="fx-card" onclick="copyText('${gradFull(g.colors,g.angle).replace(/'/g,"\\'")}')">
-<div class="fx-fill shine-effect" style="background:${css}"></div>
-<div class="fx-label">✨ Shine</div></div>
-<div class="fx-card" onclick="copyText('${gradFull(goldColors,g.angle).replace(/'/g,"\\'")}')">
-<div class="fx-fill gold-overlay" style="background:${gradCSS(goldColors,g.angle)}"></div>
-<div class="fx-label">🥇 Gold</div></div>
-<div class="fx-card" onclick="copyText('${gradFull(silverColors,g.angle).replace(/'/g,"\\'")}')">
-<div class="fx-fill silver-overlay" style="background:${gradCSS(silverColors,g.angle)}"></div>
-<div class="fx-label">🥈 Silver</div></div>
-<div class="fx-card" onclick="copyText('${gradFull(diamondColors,g.angle).replace(/'/g,"\\'")}')">
-<div class="fx-fill diamond-overlay" style="background:${gradCSS(diamondColors,g.angle)}"></div>
-<div class="fx-label">💎 Diamond</div></div>`;
-
-// Element Preview
-document.getElementById('gElements').innerHTML=`
-<div class="elem-box"><div class="elem-label">Button</div>
-<div class="elem-btn" style="background:${css}">Buton Önizle</div></div>
-<div class="elem-box"><div class="elem-label">Text</div>
-<div class="elem-text" style="background:${css};-webkit-background-clip:text;background-clip:text">Gradient</div></div>
-<div class="elem-box"><div class="elem-label">Logo</div>
-<div class="elem-circle" style="background:${css}"></div></div>
-<div class="elem-box"><div class="elem-label">Card</div>
-<div class="elem-card-demo" style="background:${css}"></div></div>`;
-
-// Angle
-document.getElementById('gAngle').value=g.angle;
-document.getElementById('gAngleVal').textContent=g.angle+'°';
-document.getElementById('gAnglePresets').innerHTML=[0,45,90,135,180,225,270,315].map(a=>
-`<button class="ap${a===g.angle?' active':''}" onclick="st.gEdit.angle=${a};renderGModal()">${a}°</button>`).join('');
-
-// CSS
-document.getElementById('gCSS').textContent=gradFull(g.colors,g.angle);
-
-// Suggestions
-renderGSuggestions();
-}
-
-function updateGAngle(v){st.gEdit.angle=parseInt(v);renderGModal()}
-
-function gSugSwitch(tab,btn){
-st.gSugTab=tab;
-document.querySelectorAll('#gSugTabs .sug-tab').forEach(b=>b.classList.remove('active'));
-btn.classList.add('active');renderGSuggestions()}
-
-function renderGSuggestions(){
-const c=document.getElementById('gSugContent');const g=st.gEdit;if(!g)return;
-switch(st.gSugTab){
-case'similar':
-const sim=gradients.filter(x=>x.id!==g.id).map(x=>{let sc=0;
-g.categories.forEach(ca=>{if(x.categories.includes(ca))sc+=3});
-g.colorTags.forEach(t=>{if(x.colorTags.includes(t))sc+=2});return{...x,sc}})
-.sort((a,b)=>b.sc-a.sc).slice(0,8);
-c.innerHTML=`<div class="sug-grid">${sim.map(s=>`
-<div class="sug-card" onclick="openGModal(${s.id})" style="background:${gradCSS(s.colors,s.angle)}">
-<div class="sug-name">${s.name}</div></div>`).join('')}</div>`;break;
-case'lighter':renderGVersions(c,g,[10,20,30],['Biraz Açık','Açık','Çok Açık']);break;
-case'darker':renderGVersions(c,g,[-10,-20,-30],['Biraz Koyu','Koyu','Çok Koyu']);break;
-case'tones':
-const hsl=hexToHSL(g.colors[0]);
-const harms=[{n:'Analogous',hs:[-30,0,30]},{n:'Complementary',hs:[0,180]},
-{n:'Triadic',hs:[0,120,240]},{n:'Split-Comp.',hs:[0,150,210]}];
-c.innerHTML=harms.map(h=>{
-const cols=h.hs.map(s=>hslToHex((hsl.h+s+360)%360,hsl.s,hsl.l));
-const css=gradCSS(cols,g.angle);const full=gradFull(cols,g.angle);
-return`<div class="ver-row"><span class="ver-label">${h.n}</span>
-<div class="ver-preview" style="background:${css}" onclick="st.gEdit.colors=[${cols.map(c=>`'${c}'`)}];renderGModal();toast('Uygulandı!')"></div>
-<button class="ver-copy" onclick="event.stopPropagation();copyText(\`${full}\`)">📋</button></div>`}).join('');break;
-}}
-
-function renderGVersions(c,g,amts,labels){
-c.innerHTML=amts.map((a,i)=>{const nc=g.colors.map(x=>adjLight(x,a));
-const css=gradCSS(nc,g.angle);const full=gradFull(nc,g.angle);
-return`<div class="ver-row"><span class="ver-label">${labels[i]}</span>
-<div class="ver-preview" style="background:${css}" onclick="st.gEdit.colors=[${nc.map(x=>`'${x}'`)}];renderGModal();toast('Uygulandı!')"></div>
-<button class="ver-copy" onclick="event.stopPropagation();copyText(\`${full}\`)">📋</button></div>`}).join('')}
-
-function randomGradient(){
-const pool=st.gFiltered.length?st.gFiltered:gradients;
-if(Math.random()>.4&&pool.length){openGModal(pool[Math.floor(Math.random()*pool.length)].id);return}
-const n=2+Math.floor(Math.random()*3);const bh=Math.random()*360;const cols=[];
-let sr=[50,90],lr=[35,75];
-if(st.gCat==='pastel'){sr=[25,45];lr=[80,92]}
-else if(st.gCat==='neon'){sr=[90,100];lr=[45,60]}
-else if(st.gCat==='dark'){sr=[30,60];lr=[5,22]}
-else if(st.gCat==='warm'){sr=[70,100];lr=[45,70]}
-else if(st.gCat==='cold'){sr=[35,65];lr=[60,85]}
-for(let i=0;i<n;i++){cols.push(hslToHex((bh+i*(50+Math.random()*50))%360,
-sr[0]+Math.random()*(sr[1]-sr[0]),lr[0]+Math.random()*(lr[1]-lr[0])))}
-const ang=[0,45,90,135,180,225,270,315][Math.floor(Math.random()*8)];
-st.gEdit={id:-1,name:'Rastgele Gradient',colors:cols,angle:ang,categories:['custom'],colorTags:[]};
-st.gSugTab='similar';renderGModal();
-document.getElementById('gOverlay').classList.add('open');document.body.style.overflow='hidden';
-}
-
-// ===================== SOLID COLOR SECTION =====================
-
-function renderSFilters(){
-document.getElementById('sCatFilters').innerHTML=sCats.map(c=>
-`<button class="fbtn ${st.sCat===c.id?'active':''}" onclick="st.sCat='${c.id}';renderSFilters();filterS()">${c.icon} ${c.label}</button>`).join('');
-document.getElementById('sColorFilters').innerHTML=colorOpts.map(c=>
-`<button class="fbtn ${st.sColor===c.id?'active':''}" onclick="st.sColor='${c.id}';renderSFilters();filterS()">
-${c.hex?`<span class="cdot" style="background:${c.hex}"></span>`:'✦'} ${c.label}</button>`).join('');
-}
-
-function filterS(){
-let r=[...solidColors];
-if(st.sCat!=='all')r=r.filter(c=>c.category===st.sCat);
-if(st.sColor!=='all')r=r.filter(c=>c.colorTag===st.sColor);
-st.sFiltered=r;st.sDisp=16;
-document.getElementById('sCount').textContent=r.length;
-renderSGrid();
-}
-
-function renderSGrid(){
-const grid=document.getElementById('sGrid');
-const show=st.sFiltered.slice(0,st.sDisp);
-if(!show.length){grid.innerHTML='<div class="no-res"><div class="em">🔍</div><p>Sonuç bulunamadı</p></div>';
-document.getElementById('sLoadWrap').style.display='none';return}
-grid.innerHTML=show.map((c,i)=>`
-<div class="c-card" onclick="openSModal(${c.id})" style="animation-delay:${Math.min(i*.03,.35)}s">
-<div class="swatch" style="background:${c.hex}"></div>
-<div class="cinfo"><div class="cname">${c.name}</div><div class="chex">${c.hex}</div></div></div>`).join('');
-const w=document.getElementById('sLoadWrap');
-if(st.sDisp>=st.sFiltered.length){w.style.display='none'}else{w.style.display='block'}
-}
-
-function sLoadMore(){st.sDisp+=16;renderSGrid()}
-
-// ===================== SOLID COLOR MODAL =====================
-
-function openSModal(id){
-st.sEdit=solidColors.find(x=>x.id===id);if(!st.sEdit)return;
-renderSModal();
-document.getElementById('sOverlay').classList.add('open');document.body.style.overflow='hidden';
-}
-
-function closeSModal(e){
-if(e&&e.target!==document.getElementById('sOverlay'))return;
-document.getElementById('sOverlay').classList.remove('open');document.body.style.overflow='';st.sEdit=null}
-
-function renderSModal(){
-const c=st.sEdit;if(!c)return;
-const hex=c.hex;const rgb=hexToRGB(hex);const hsl=hexToHSL(hex);
-
-document.getElementById('sSwatch').style.background=hex;
-document.getElementById('sTitle').textContent=c.name;
-const catLabel=sCats.find(x=>x.id===c.category);
-document.getElementById('sSub').textContent=`${catLabel?catLabel.icon+' '+catLabel.label:c.category} • ${c.colorTag}`;
-
-// Values
-document.getElementById('sVals').innerHTML=`
-<div class="cm-val" onclick="copyText('${hex.toUpperCase()}')">
-<div class="cv-label">HEX</div><div class="cv-code">${hex.toUpperCase()}</div></div>
-<div class="cm-val" onclick="copyText('${rgbStr(hex)}')">
-<div class="cv-label">RGB</div><div class="cv-code">${rgbStr(hex)}</div></div>
-<div class="cm-val" onclick="copyText('${hslStr(hex)}')">
-<div class="cv-label">HSL</div><div class="cv-code">${hslStr(hex)}</div></div>`;
-
-// Tints
-const tints=[];for(let i=1;i<=7;i++)tints.push(adjLight(hex,i*8));
-document.getElementById('sTints').innerHTML=tints.map(t=>`
-<div class="shade-item" onclick="copyText('${t.toUpperCase()}')">
-<div class="shade-sw" style="background:${t}"></div><span class="shade-hex">${t.toUpperCase()}</span></div>`).join('');
-
-// Shades
-const shades=[];for(let i=1;i<=7;i++)shades.push(adjLight(hex,-i*8));
-document.getElementById('sShades').innerHTML=shades.map(s=>`
-<div class="shade-item" onclick="copyText('${s.toUpperCase()}')">
-<div class="shade-sw" style="background:${s}"></div><span class="shade-hex">${s.toUpperCase()}</span></div>`).join('');
-
-// Harmonies
-const harm=[
-{n:'Tamamlayıcı',hs:[0,180]},
-{n:'Analogous',hs:[-30,0,30]},
-{n:'Triadic',hs:[0,120,240]},
-{n:'Split-Comp.',hs:[0,150,210]},
-{n:'Tetradic',hs:[0,90,180,270]},
-{n:'Square',hs:[0,60,180,240]}
+// ===================== DATA =====================
+const COLORS: ColorItem[] = [
+  { id:"p1",name:"Baby Pink",hex:"#FFB6C1",category:"pastel" },{ id:"p2",name:"Lavender",hex:"#E6E6FA",category:"pastel" },
+  { id:"p3",name:"Mint Cream",hex:"#B2F5EA",category:"pastel" },{ id:"p4",name:"Peach Puff",hex:"#FFDAB9",category:"pastel" },
+  { id:"p5",name:"Sky Blue",hex:"#BAE6FD",category:"pastel" },{ id:"p6",name:"Lilac",hex:"#DDD6FE",category:"pastel" },
+  { id:"p7",name:"Butter",hex:"#FEF3C7",category:"pastel" },{ id:"p8",name:"Rose Quartz",hex:"#FECDD3",category:"pastel" },
+  { id:"p9",name:"Seafoam",hex:"#A7F3D0",category:"pastel" },{ id:"p10",name:"Periwinkle",hex:"#C7D2FE",category:"pastel" },
+  { id:"p11",name:"Blush",hex:"#FBC4AB",category:"pastel" },{ id:"p12",name:"Wisteria",hex:"#C9B1FF",category:"pastel" },
+  { id:"n1",name:"Electric Pink",hex:"#FF006E",category:"neon" },{ id:"n2",name:"Lime Punch",hex:"#39FF14",category:"neon" },
+  { id:"n3",name:"Aqua Cyan",hex:"#00FFFF",category:"neon" },{ id:"n4",name:"Magenta",hex:"#FF00FF",category:"neon" },
+  { id:"n5",name:"Electric Blue",hex:"#0080FF",category:"neon" },{ id:"n6",name:"Neon Orange",hex:"#FF6600",category:"neon" },
+  { id:"n7",name:"Chartreuse",hex:"#CCFF00",category:"neon" },{ id:"n8",name:"Neon Red",hex:"#FF3131",category:"neon" },
+  { id:"n9",name:"Neon Green",hex:"#00FF00",category:"neon" },{ id:"n10",name:"Vivid Purple",hex:"#BF00FF",category:"neon" },
+  { id:"n11",name:"Hot Yellow",hex:"#FFE100",category:"neon" },{ id:"n12",name:"Laser Pink",hex:"#FF69B4",category:"neon" },
+  { id:"d1",name:"Midnight Blue",hex:"#191970",category:"dark" },{ id:"d2",name:"Dark Slate",hex:"#2F4F4F",category:"dark" },
+  { id:"d3",name:"Charcoal",hex:"#36454F",category:"dark" },{ id:"d4",name:"Dark Plum",hex:"#301934",category:"dark" },
+  { id:"d5",name:"Navy",hex:"#000080",category:"dark" },{ id:"d6",name:"Dark Forest",hex:"#0B3D0B",category:"dark" },
+  { id:"d7",name:"Burgundy",hex:"#800020",category:"dark" },{ id:"d8",name:"Dark Teal",hex:"#014D4E",category:"dark" },
+  { id:"d9",name:"Obsidian",hex:"#0B1215",category:"dark" },{ id:"d10",name:"Dark Wine",hex:"#4A0E2E",category:"dark" },
+  { id:"d11",name:"Onyx",hex:"#181818",category:"dark" },{ id:"d12",name:"Deep Indigo",hex:"#1A0533",category:"dark" },
+  { id:"w1",name:"Coral",hex:"#FF6F61",category:"warm" },{ id:"w2",name:"Tangerine",hex:"#FF9966",category:"warm" },
+  { id:"w3",name:"Tomato",hex:"#FF6347",category:"warm" },{ id:"w4",name:"Amber",hex:"#FFBF00",category:"warm" },
+  { id:"w5",name:"Rust",hex:"#B7410E",category:"warm" },{ id:"w6",name:"Terra Cotta",hex:"#E2725B",category:"warm" },
+  { id:"w7",name:"Marigold",hex:"#EAA221",category:"warm" },{ id:"w8",name:"Vermilion",hex:"#E34234",category:"warm" },
+  { id:"w9",name:"Papaya",hex:"#FFEFD5",category:"warm" },{ id:"w10",name:"Cinnamon",hex:"#D2691E",category:"warm" },
+  { id:"w11",name:"Peach",hex:"#FFCBA4",category:"warm" },{ id:"w12",name:"Sunset",hex:"#FAD6A5",category:"warm" },
+  { id:"c1",name:"Ice Blue",hex:"#99D9EA",category:"cold" },{ id:"c2",name:"Robin Egg",hex:"#81D8D0",category:"cold" },
+  { id:"c3",name:"Steel Blue",hex:"#4682B4",category:"cold" },{ id:"c4",name:"Alice Blue",hex:"#E1F5FE",category:"cold" },
+  { id:"c5",name:"Sapphire",hex:"#0F52BA",category:"cold" },{ id:"c6",name:"Teal",hex:"#008080",category:"cold" },
+  { id:"c7",name:"Aquamarine",hex:"#7FFFD4",category:"cold" },{ id:"c8",name:"Cerulean",hex:"#007BA7",category:"cold" },
+  { id:"c9",name:"Powder Blue",hex:"#B0E0E6",category:"cold" },{ id:"c10",name:"Cobalt",hex:"#0047AB",category:"cold" },
+  { id:"c11",name:"Arctic",hex:"#81D4FA",category:"cold" },{ id:"c12",name:"Frost",hex:"#E0F7FA",category:"cold" },
+  { id:"e1",name:"Olive",hex:"#808000",category:"earth" },{ id:"e2",name:"Sienna",hex:"#A0522D",category:"earth" },
+  { id:"e3",name:"Sage",hex:"#9CAF88",category:"earth" },{ id:"e4",name:"Sand",hex:"#C2B280",category:"earth" },
+  { id:"e5",name:"Clay",hex:"#B66A50",category:"earth" },{ id:"e6",name:"Forest Green",hex:"#228B22",category:"earth" },
+  { id:"e7",name:"Khaki",hex:"#C3B091",category:"earth" },{ id:"e8",name:"Moss",hex:"#8A9A5B",category:"earth" },
+  { id:"e9",name:"Walnut",hex:"#773F1A",category:"earth" },{ id:"e10",name:"Stone",hex:"#928E85",category:"earth" },
+  { id:"e11",name:"Terracotta",hex:"#CC4E24",category:"earth" },{ id:"e12",name:"Bark",hex:"#6B4226",category:"earth" },
 ];
-document.getElementById('sHarmonies').innerHTML=harm.map(h=>{
-const cols=h.hs.map(s=>hslToHex((hsl.h+s+360)%360,hsl.s,hsl.l));
-return`<div class="harm-card" onclick="copyText('${cols.map(x=>x.toUpperCase()).join(', ')}')">
-<div class="harm-name">${h.n}</div>
-<div class="harm-colors">${cols.map(x=>
-`<div class="harm-c" style="background:${x}" data-hex="${x.toUpperCase()}" onclick="event.stopPropagation();copyText('${x.toUpperCase()}')"></div>`).join('')}</div></div>`}).join('');
 
-// Similar
-const simColors=solidColors.filter(x=>x.id!==c.id).map(x=>{
-const xhsl=hexToHSL(x.hex);let d=Math.abs(xhsl.h-hsl.h);if(d>180)d=360-d;
-const sc=d+Math.abs(xhsl.s-hsl.s)*.5+Math.abs(xhsl.l-hsl.l)*.5;return{...x,sc}})
-.sort((a,b)=>a.sc-b.sc).slice(0,8);
-document.getElementById('sSimilar').innerHTML=simColors.map(s=>`
-<div class="sim-c" onclick="openSModal(${s.id})">
-<div class="sc-sw" style="background:${s.hex}"></div>
-<div class="sc-info"><div class="sc-name">${s.name}</div><div class="sc-hex">${s.hex}</div></div></div>`).join('');
+const GRADS: GradientItem[] = [
+  // Pastel
+  { id:"gp1",name:"Cotton Candy",colors:["#FFB6C1","#E6E6FA"],category:"pastel",direction:135 },
+  { id:"gp2",name:"Peach Blossom",colors:["#FFDAB9","#FFB7C5"],category:"pastel",direction:135 },
+  { id:"gp3",name:"Lavender Dream",colors:["#E6E6FA","#D8BFD8"],category:"pastel",direction:90 },
+  { id:"gp4",name:"Mint Breeze",colors:["#B2F5EA","#C6F6D5"],category:"pastel",direction:135 },
+  { id:"gp5",name:"Baby Blue",colors:["#BAE6FD","#DDD6FE"],category:"pastel",direction:135 },
+  { id:"gp6",name:"Sunset Blush",colors:["#FED7AA","#FECACA"],category:"pastel",direction:135 },
+  { id:"gp7",name:"Fairy Dust",colors:["#F9A8D4","#C4B5FD"],category:"pastel",direction:135 },
+  { id:"gp8",name:"Spring Meadow",colors:["#BBF7D0","#FEF08A"],category:"pastel",direction:135 },
+  { id:"gp9",name:"Cotton Cloud",colors:["#F3E8FF","#FCE7F3"],category:"pastel",direction:90 },
+  { id:"gp10",name:"Serenity",colors:["#BFDBFE","#E0E7FF"],category:"pastel",direction:135 },
+  { id:"gp11",name:"Blossom",colors:["#FECDD3","#FBC4AB"],category:"pastel",direction:45 },
+  { id:"gp12",name:"Cloud Nine",colors:["#DDD6FE","#BAE6FD"],category:"pastel",direction:135 },
+  // Neon
+  { id:"gn1",name:"Electric Pulse",colors:["#FF006E","#8338EC"],category:"neon",direction:135 },
+  { id:"gn2",name:"Cyber Glow",colors:["#00FF87","#60EFFF"],category:"neon",direction:135 },
+  { id:"gn3",name:"Neon Sunset",colors:["#FF6B35","#FF006E"],category:"neon",direction:135 },
+  { id:"gn4",name:"Toxic Green",colors:["#39FF14","#7CFF01"],category:"neon",direction:90 },
+  { id:"gn5",name:"Laser Blue",colors:["#00F5FF","#0080FF"],category:"neon",direction:135 },
+  { id:"gn6",name:"Hot Pink",colors:["#FF69B4","#FF1493"],category:"neon",direction:135 },
+  { id:"gn7",name:"Plasma",colors:["#FF00FF","#00FFFF"],category:"neon",direction:135 },
+  { id:"gn8",name:"Neon Violet",colors:["#BF00FF","#8000FF"],category:"neon",direction:135 },
+  { id:"gn9",name:"Radioactive",colors:["#ADFF2F","#00FF00"],category:"neon",direction:90 },
+  { id:"gn10",name:"Digital Fire",colors:["#FF4500","#FF0080"],category:"neon",direction:135 },
+  { id:"gn11",name:"Vivid Rays",colors:["#FFE100","#FF006E"],category:"neon",direction:45 },
+  { id:"gn12",name:"Electro Wave",colors:["#00FFFF","#BF00FF"],category:"neon",direction:135 },
+  // Dark
+  { id:"gd1",name:"Midnight",colors:["#0F0C29","#302B63","#24243E"],category:"dark",direction:135 },
+  { id:"gd2",name:"Deep Space",colors:["#000000","#0F2027","#203A43"],category:"dark",direction:135 },
+  { id:"gd3",name:"Dark Ocean",colors:["#141E30","#243B55"],category:"dark",direction:135 },
+  { id:"gd4",name:"Obsidian",colors:["#0C0C0C","#1A1A2E","#16213E"],category:"dark",direction:135 },
+  { id:"gd5",name:"Eclipse",colors:["#1A1A2E","#0F3460"],category:"dark",direction:135 },
+  { id:"gd6",name:"Abyss",colors:["#000428","#004E92"],category:"dark",direction:135 },
+  { id:"gd7",name:"Shadow",colors:["#232526","#414345"],category:"dark",direction:135 },
+  { id:"gd8",name:"Charcoal Fade",colors:["#1C1C1C","#383838"],category:"dark",direction:135 },
+  { id:"gd9",name:"Dark Matter",colors:["#0D0D0D","#1A0A2E"],category:"dark",direction:135 },
+  { id:"gd10",name:"Void",colors:["#000000","#130F40"],category:"dark",direction:90 },
+  { id:"gd11",name:"Raven",colors:["#0F0F0F","#2D2D3F","#0F0F0F"],category:"dark",direction:135 },
+  { id:"gd12",name:"Black Hole",colors:["#000000","#1B1B2F","#000000"],category:"dark",direction:180 },
+  // Warm
+  { id:"gw1",name:"Sunset Glow",colors:["#FF512F","#F09819"],category:"warm",direction:135 },
+  { id:"gw2",name:"Fire Storm",colors:["#FF416C","#FF4B2B"],category:"warm",direction:135 },
+  { id:"gw3",name:"Autumn Leaves",colors:["#D38312","#A83279"],category:"warm",direction:135 },
+  { id:"gw4",name:"Coral Reef",colors:["#FF6F61","#FF9A76"],category:"warm",direction:135 },
+  { id:"gw5",name:"Amber Glow",colors:["#F7971E","#FFD200"],category:"warm",direction:135 },
+  { id:"gw6",name:"Volcano",colors:["#EB3349","#F45C43"],category:"warm",direction:135 },
+  { id:"gw7",name:"Honey Drip",colors:["#FDB813","#FF8C00"],category:"warm",direction:90 },
+  { id:"gw8",name:"Rose Gold",colors:["#BD4F6C","#D7816A"],category:"warm",direction:135 },
+  { id:"gw9",name:"Peach Glow",colors:["#FFB347","#FFCC33"],category:"warm",direction:135 },
+  { id:"gw10",name:"Magma Flow",colors:["#FC466B","#3F5EFB"],category:"warm",direction:135 },
+  { id:"gw11",name:"Blaze",colors:["#FF0000","#FF7700","#FFAA00"],category:"warm",direction:90 },
+  { id:"gw12",name:"Burnt Orange",colors:["#FF6A00","#EE0979"],category:"warm",direction:135 },
+  // Cold
+  { id:"gc1",name:"Arctic Glow",colors:["#74EBD5","#9FACE6"],category:"cold",direction:135 },
+  { id:"gc2",name:"Ice Crystal",colors:["#E0EAFC","#CFDEF3"],category:"cold",direction:135 },
+  { id:"gc3",name:"Frozen Lake",colors:["#ACB6E5","#86FDE8"],category:"cold",direction:135 },
+  { id:"gc4",name:"Winter Sky",colors:["#1CB5E0","#000046"],category:"cold",direction:135 },
+  { id:"gc5",name:"Glacier",colors:["#B2FEFA","#0ED2F7"],category:"cold",direction:135 },
+  { id:"gc6",name:"Ocean Mist",colors:["#43CEA2","#185A9D"],category:"cold",direction:135 },
+  { id:"gc7",name:"Frost Bite",colors:["#E8EAF6","#C5CAE9"],category:"cold",direction:90 },
+  { id:"gc8",name:"Deep Blue",colors:["#4568DC","#B06AB3"],category:"cold",direction:135 },
+  { id:"gc9",name:"Tundra",colors:["#0083B0","#00B4DB"],category:"cold",direction:135 },
+  { id:"gc10",name:"Polar Night",colors:["#2C3E50","#3498DB"],category:"cold",direction:135 },
+  { id:"gc11",name:"Crystal Clear",colors:["#A8EDEA","#FED6E3"],category:"cold",direction:135 },
+  { id:"gc12",name:"Blue Lagoon",colors:["#0052D4","#4364F7","#6FB1FC"],category:"cold",direction:135 },
+  // Shine / Metal
+  { id:"gs1",name:"Gold",colors:["#BF953F","#FCF6BA","#B38728","#FBF5B7","#AA771C"],category:"shine",direction:135 },
+  { id:"gs2",name:"Silver",colors:["#C9D6FF","#E2E2E2","#C9D6FF"],category:"shine",direction:135 },
+  { id:"gs3",name:"Rose Gold Metal",colors:["#B76E79","#EECDA3","#B76E79"],category:"shine",direction:135 },
+  { id:"gs4",name:"Bronze",colors:["#CD7F32","#EBCB8B","#CD7F32"],category:"shine",direction:135 },
+  { id:"gs5",name:"Platinum",colors:["#D4D4D4","#FAFAFA","#D4D4D4","#E8E8E8"],category:"shine",direction:135 },
+  { id:"gs6",name:"Diamond",colors:["#B9F2FF","#FFFFFF","#69D2E7","#FFFFFF"],category:"shine",direction:135 },
+  { id:"gs7",name:"Chrome",colors:["#9E9E9E","#F5F5F5","#9E9E9E","#E0E0E0"],category:"shine",direction:135 },
+  { id:"gs8",name:"Copper Shine",colors:["#B87333","#DA9100","#B87333"],category:"shine",direction:135 },
+  { id:"gs9",name:"Pearl",colors:["#FDFCFB","#E2D1C3","#FDFCFB"],category:"shine",direction:135 },
+  { id:"gs10",name:"Titanium",colors:["#606C88","#3F4C6B","#606C88"],category:"shine",direction:135 },
+  // Multi-color
+  { id:"gm1",name:"Rainbow",colors:["#FF0000","#FF7F00","#FFFF00","#00FF00","#0000FF"],category:"multi",direction:90 },
+  { id:"gm2",name:"Aurora Borealis",colors:["#00C9FF","#92FE9D","#F0FF00"],category:"multi",direction:135 },
+  { id:"gm3",name:"Tropical Punch",colors:["#FF6B6B","#FFE66D","#4ECDC4"],category:"multi",direction:135 },
+  { id:"gm4",name:"Unicorn",colors:["#F472B6","#A78BFA","#60A5FA","#34D399"],category:"multi",direction:135 },
+  { id:"gm5",name:"Northern Lights",colors:["#43E97B","#38F9D7","#FA709A"],category:"multi",direction:135 },
+  { id:"gm6",name:"Candy Rush",colors:["#FF61D2","#FE9090","#FFE29F"],category:"multi",direction:135 },
+  { id:"gm7",name:"Cosmic Dust",colors:["#FF00CC","#333399","#00CCFF"],category:"multi",direction:135 },
+  { id:"gm8",name:"Sunset Beach",colors:["#FF6B6B","#FFA07A","#FFD700","#FF6347"],category:"multi",direction:90 },
+  { id:"gm9",name:"Prism Light",colors:["#667EEA","#764BA2","#F093FB"],category:"multi",direction:135 },
+  { id:"gm10",name:"Galaxy Swirl",colors:["#654EA3","#EAAFC8","#654EA3"],category:"multi",direction:135 },
+  { id:"gm11",name:"Fruit Salad",colors:["#11998E","#38EF7D","#F9D423","#FF4E50"],category:"multi",direction:90 },
+  { id:"gm12",name:"Holo Dream",colors:["#A770EF","#CF8BF3","#FDB99B"],category:"multi",direction:135 },
+];
+
+const CATEGORIES_C = [
+  { id:"all",label:"All",icon:"🎨" },{ id:"pastel",label:"Pastel",icon:"🌸" },
+  { id:"neon",label:"Neon",icon:"⚡" },{ id:"dark",label:"Dark",icon:"🌑" },
+  { id:"warm",label:"Warm",icon:"🔥" },{ id:"cold",label:"Cold",icon:"❄️" },
+  { id:"earth",label:"Earth",icon:"🌿" },
+];
+const CATEGORIES_G = [
+  { id:"all",label:"All",icon:"🎨" },{ id:"pastel",label:"Pastel",icon:"🌸" },
+  { id:"neon",label:"Neon",icon:"⚡" },{ id:"dark",label:"Dark",icon:"🌑" },
+  { id:"warm",label:"Warm",icon:"🔥" },{ id:"cold",label:"Cold",icon:"❄️" },
+  { id:"shine",label:"Shine",icon:"✨" },{ id:"multi",label:"Multi",icon:"🌈" },
+];
+const DIRS = [0, 45, 90, 135, 180, 225, 270, 315];
+const DIR_ARROWS: Record<number,string> = {0:"↑",45:"↗",90:"→",135:"↘",180:"↓",225:"↙",270:"←",315:"↖"};
+
+// ===================== COMPONENT =====================
+export default function ChromaKit() {
+  const [tab, setTab] = useState<"solids"|"gradients">("gradients");
+  const [cat, setCat] = useState("all");
+  const [selColor, setSelColor] = useState<ColorItem|null>(null);
+  const [selGrad, setSelGrad] = useState<GradientItem|null>(null);
+  const [vis, setVis] = useState(30);
+  const [copied, setCopied] = useState("");
+  const [ver, setVer] = useState<"normal"|"dark"|"light">("normal");
+  const [editing, setEditing] = useState(false);
+  const [eColors, setEColors] = useState<string[]>([]);
+  const [eDir, setEDir] = useState(135);
+
+  const cats = tab === "solids" ? CATEGORIES_C : CATEGORIES_G;
+  const filtered = useMemo(() => {
+    if (tab === "solids") return cat === "all" ? COLORS : COLORS.filter(c => c.category === cat);
+    return cat === "all" ? GRADS : GRADS.filter(g => g.category === cat);
+  }, [tab, cat]);
+
+  const similar = useMemo(() => {
+    if (!selGrad) return [];
+    const avg = selGrad.colors.map(getHue).reduce((a, b) => a + b, 0) / selGrad.colors.length;
+    return GRADS.filter(g => g.id !== selGrad.id).map(g => {
+      const h = g.colors.map(getHue).reduce((a, b) => a + b, 0) / g.colors.length;
+      const d = Math.abs(avg - h); return { ...g, diff: Math.min(d, 360 - d) };
+    }).sort((a, b) => a.diff - b.diff).slice(0, 6);
+  }, [selGrad]);
+
+  const copy = useCallback(async (t: string) => {
+    try { await navigator.clipboard.writeText(t); setCopied(t); setTimeout(() => setCopied(""), 2000); } catch {}
+  }, []);
+
+  const dColors = useCallback((c: string[], v: "normal"|"dark"|"light") =>
+    v === "dark" ? c.map(x => darken(x, 0.3)) : v === "light" ? c.map(x => lighten(x, 0.3)) : c, []);
+
+  const openGrad = useCallback((g: GradientItem) => {
+    setSelGrad(g); setEColors([...g.colors]); setEDir(g.direction); setVer("normal"); setEditing(false);
+  }, []);
+
+  const doRandom = useCallback(() => {
+    if (tab === "solids") {
+      const items = cat === "all" ? COLORS : COLORS.filter(c => c.category === cat);
+      setSelColor(items[Math.floor(Math.random() * items.length)]);
+    } else {
+      const items = cat === "all" ? GRADS : GRADS.filter(g => g.category === cat);
+      openGrad(items[Math.floor(Math.random() * items.length)]);
+    }
+  }, [tab, cat, openGrad]);
+
+  const changeTab = (t: "solids"|"gradients") => {
+    setTab(t); setCat("all"); setSelColor(null); setSelGrad(null); setVis(30); setEditing(false);
+  };
+
+  const curColors = editing ? eColors : (selGrad?.colors || []);
+  const curDir = editing ? eDir : (selGrad?.direction || 135);
+  const displayC = dColors(curColors, ver);
+  const cssCode = `background: linear-gradient(${curDir}deg, ${displayC.join(", ")});`;
+
+  return (
+    <div className="min-h-screen bg-[#09090B] text-white selection:bg-violet-500/30">
+      {/* Toast */}
+      {copied && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-2 bg-emerald-500 text-white pl-3 pr-4 py-2.5 rounded-full text-sm font-semibold shadow-2xl shadow-emerald-500/30 animate-[slideDown_0.3s_ease]">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+          Copied!
+        </div>
+      )}
+
+      {/* HEADER */}
+      <header className="sticky top-0 z-50 backdrop-blur-2xl bg-[#09090B]/70 border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 flex items-center justify-center text-base">◆</div>
+            <span className="text-lg font-bold tracking-tight">ChromaKit</span>
+            <span className="hidden sm:block text-[11px] text-white/30 font-medium bg-white/5 px-2 py-0.5 rounded-md">v1.0</span>
+          </div>
+          <div className="flex gap-1 bg-white/[0.04] rounded-xl p-1 border border-white/[0.06]">
+            {(["solids","gradients"] as const).map(t => (
+              <button key={t} onClick={() => changeTab(t)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  tab===t ? "bg-white text-black shadow-lg" : "text-white/50 hover:text-white/80 hover:bg-white/[0.04]"
+                }`}>
+                {t === "solids" ? "🎨 Colors" : "🌈 Gradients"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* TOOLBAR */}
+      <div className="sticky top-16 z-40 backdrop-blur-2xl bg-[#09090B]/70 border-b border-white/[0.04] py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 flex-wrap">
+          {cats.map(c => (
+            <button key={c.id} onClick={() => { setCat(c.id); setVis(30); }}
+              className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border ${
+                cat===c.id
+                  ? "bg-white text-black border-white shadow-lg shadow-white/10"
+                  : "border-white/[0.08] text-white/50 hover:text-white/80 hover:border-white/20 hover:bg-white/[0.04]"
+              }`}>
+              <span className="mr-1">{c.icon}</span>{c.label}
+            </button>
+          ))}
+          <button onClick={doRandom}
+            className="ml-auto px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 transition-all duration-200 shadow-lg shadow-violet-500/20 active:scale-95">
+            🎲 Random
+          </button>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {tab === "solids" ? (
+          <>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+              {(filtered as ColorItem[]).slice(0, vis).map(c => (
+                <button key={c.id} onClick={() => setSelColor(c)}
+                  className="group text-left transition-transform duration-200 hover:scale-105 active:scale-95">
+                  <div className="aspect-square rounded-2xl shadow-lg transition-shadow duration-200 group-hover:shadow-xl border border-white/[0.06]"
+                    style={{ backgroundColor: c.hex }} />
+                  <div className="mt-2 px-0.5">
+                    <div className="text-xs font-medium text-white/70 truncate">{c.name}</div>
+                    <div className="text-[10px] text-white/30 font-mono">{c.hex}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {vis < filtered.length && (
+              <div className="mt-10 text-center">
+                <button onClick={() => setVis(v => v + 30)}
+                  className="px-8 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-sm font-medium text-white/60 hover:bg-white/[0.08] hover:text-white transition-all duration-200">
+                  Load More
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {(filtered as GradientItem[]).slice(0, vis).map(g => (
+                <button key={g.id} onClick={() => openGrad(g)}
+                  className="group text-left transition-transform duration-200 hover:scale-[1.04] active:scale-95">
+                  <div className="aspect-square rounded-2xl shadow-lg transition-all duration-300 group-hover:shadow-2xl border border-white/[0.06] group-hover:border-white/[0.12]"
+                    style={{ background: gCSS(g.colors, g.direction) }} />
+                  <div className="mt-2.5 px-0.5 flex items-center justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-white/80">{g.name}</div>
+                      <div className="text-[11px] text-white/30">{g.colors.length} colors · {g.category}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {vis < filtered.length && (
+              <div className="mt-10 text-center">
+                <button onClick={() => setVis(v => v + 30)}
+                  className="px-8 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-sm font-medium text-white/60 hover:bg-white/[0.08] hover:text-white transition-all duration-200">
+                  Load More
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* COLOR DETAIL MODAL */}
+      {selColor && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setSelColor(null)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+          <div className="relative bg-[#111114] rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto border border-white/[0.08] shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <button onClick={() => setSelColor(null)} className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  Back
+                </button>
+                <span className="text-xs text-white/20 font-medium bg-white/[0.04] px-3 py-1 rounded-lg">{selColor.category}</span>
+              </div>
+
+              {/* Swatch */}
+              <div className="aspect-[2/1] rounded-2xl mb-6 border border-white/[0.06]"
+                style={{ backgroundColor: selColor.hex }} />
+
+              {/* Name */}
+              <h2 className="text-2xl font-bold mb-4">{selColor.name}</h2>
+
+              {/* Codes */}
+              <div className="space-y-2 mb-6">
+                {[
+                  { label: "HEX", value: selColor.hex },
+                  { label: "RGB", value: `rgb(${hexToRgb(selColor.hex).r}, ${hexToRgb(selColor.hex).g}, ${hexToRgb(selColor.hex).b})` },
+                ].map(({ label, value }) => (
+                  <button key={label} onClick={() => copy(value)}
+                    className="w-full flex items-center justify-between bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] rounded-xl px-4 py-3 transition-all group">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-white/30 font-semibold w-8">{label}</span>
+                      <span className="font-mono text-sm text-white/80">{value}</span>
+                    </div>
+                    <svg className="w-4 h-4 text-white/20 group-hover:text-violet-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+
+              {/* Similar Tones */}
+              <div>
+                <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-3">Similar Tones</h3>
+                <div className="grid grid-cols-7 gap-2">
+                  {getTones(selColor.hex).map((t, i) => (
+                    <button key={i} onClick={() => copy(t)}
+                      className="group transition-transform hover:scale-110 active:scale-95">
+                      <div className={`aspect-square rounded-xl border-2 transition-colors ${
+                        t === selColor.hex ? "border-white" : "border-transparent hover:border-white/30"
+                      }`} style={{ backgroundColor: t }} />
+                      <div className="text-[9px] font-mono text-white/30 mt-1 text-center truncate group-hover:text-white/60">{t}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GRADIENT DETAIL MODAL */}
+      {selGrad && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => { setSelGrad(null); setEditing(false); }}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+          <div className="relative bg-[#111114] rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto border border-white/[0.08] shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            <div className="p-5 sm:p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <button onClick={() => { setSelGrad(null); setEditing(false); }}
+                  className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  Back
+                </button>
+                <h2 className="text-lg font-bold">{selGrad.name}</h2>
+                <button onClick={() => setEditing(!editing)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    editing ? "bg-violet-500 text-white" : "bg-white/[0.06] text-white/50 hover:text-white hover:bg-white/[0.1]"
+                  }`}>
+                  {editing ? "✓ Editing" : "✏️ Edit"}
+                </button>
+              </div>
+
+              {/* Preview */}
+              <div className="aspect-[2.2/1] rounded-2xl mb-5 border border-white/[0.06] shadow-2xl"
+                style={{ background: gCSS(displayC, curDir) }} />
+
+              {/* Version Toggles */}
+              <div className="flex gap-2 mb-5">
+                {(["normal","dark","light"] as const).map(v => (
+                  <button key={v} onClick={() => setVer(v)}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${
+                      ver===v
+                        ? "bg-white text-black border-white shadow-lg"
+                        : "bg-white/[0.03] border-white/[0.06] text-white/50 hover:bg-white/[0.06] hover:text-white/80"
+                    }`}>
+                    {v === "normal" ? "Normal" : v === "dark" ? "🌑 Dark" : "☀️ Light"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Three preview strips */}
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {(["normal","dark","light"] as const).map(v => (
+                  <div key={v} className="space-y-1">
+                    <div className="h-10 rounded-xl border border-white/[0.06]"
+                      style={{ background: gCSS(dColors(curColors, v), curDir) }} />
+                    <div className="text-[10px] text-center text-white/25 capitalize">{v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Colors */}
+              <div className="mb-5">
+                <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-3">Colors</h3>
+                <div className="flex flex-wrap gap-2">
+                  {curColors.map((c, i) => {
+                    const dc = dColors([c], ver)[0];
+                    return (
+                      <div key={i} className="flex items-center gap-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl p-2 pr-3">
+                        {editing ? (
+                          <label className="relative w-11 h-11 rounded-lg overflow-hidden cursor-pointer border-2 border-white/10 hover:border-violet-400 transition-colors">
+                            <div className="w-full h-full" style={{ backgroundColor: dc }} />
+                            <input type="color" value={c}
+                              onChange={e => { const nc = [...eColors]; nc[i] = e.target.value.toUpperCase(); setEColors(nc); }}
+                              className="absolute inset-0 opacity-0 cursor-pointer" />
+                          </label>
+                        ) : (
+                          <div className="w-11 h-11 rounded-lg border border-white/[0.06]" style={{ backgroundColor: dc }} />
+                        )}
+                        <div>
+                          <div className="text-[10px] text-white/30">Color {i + 1}</div>
+                          <button onClick={() => copy(dc)}
+                            className="text-sm font-mono text-white/70 hover:text-violet-400 transition-colors flex items-center gap-1.5">
+                            {dc}
+                            <svg className="w-3 h-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {editing && (
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => setEColors([...eColors, "#888888"])}
+                        className="w-11 h-11 rounded-lg bg-white/[0.04] border border-dashed border-white/[0.15] hover:border-violet-400 hover:bg-violet-500/10 flex items-center justify-center text-white/30 hover:text-violet-400 transition-all text-xl">
+                        +
+                      </button>
+                      {eColors.length > 2 && (
+                        <button onClick={() => setEColors(eColors.slice(0, -1))}
+                          className="w-11 h-11 rounded-lg bg-white/[0.04] border border-dashed border-white/[0.15] hover:border-red-400 hover:bg-red-500/10 flex items-center justify-center text-white/30 hover:text-red-400 transition-all text-xl">
+                          −
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Direction */}
+              {editing && (
+                <div className="mb-5">
+                  <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-3">Direction</h3>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {DIRS.map(d => (
+                      <button key={d} onClick={() => setEDir(d)}
+                        className={`w-11 h-11 rounded-xl text-sm font-medium transition-all duration-200 flex flex-col items-center justify-center gap-0 ${
+                          eDir===d ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30" : "bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]"
+                        }`}>
+                        <span className="text-base leading-none">{DIR_ARROWS[d]}</span>
+                        <span className="text-[9px] leading-none mt-0.5">{d}°</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* CSS Code */}
+              <div className="mb-5">
+                <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-3">CSS Code</h3>
+                <div className="bg-black/40 border border-white/[0.06] rounded-xl p-4 flex items-start justify-between gap-3">
+                  <code className="text-[13px] text-emerald-400 font-mono break-all leading-relaxed flex-1">{cssCode}</code>
+                  <button onClick={() => copy(cssCode)}
+                    className="shrink-0 px-3.5 py-1.5 bg-violet-500 hover:bg-violet-400 rounded-lg text-xs font-semibold transition-all active:scale-95">
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* Similar Gradients */}
+              {!editing && similar.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-3">Similar Gradients</h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+                    {similar.map(g => (
+                      <button key={g.id} onClick={() => openGrad(g)}
+                        className="group transition-transform hover:scale-105 active:scale-95">
+                        <div className="aspect-square rounded-xl border border-white/[0.06] transition-all group-hover:border-white/20"
+                          style={{ background: gCSS(g.colors, g.direction) }} />
+                        <div className="text-[10px] text-white/30 mt-1.5 truncate group-hover:text-white/60">{g.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subtle animation keyframes */}
+      <style jsx global>{`
+        @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+      `}</style>
+    </div>
+  );
 }
-
-function randomColor(){
-const pool=st.sFiltered.length?st.sFiltered:solidColors;
-openSModal(pool[Math.floor(Math.random()*pool.length)].id);
-}
-
-// ===================== KEYBOARD =====================
-
-document.addEventListener('keydown',e=>{
-if(e.key==='Escape'){
-document.getElementById('gOverlay').classList.remove('open');
-document.getElementById('sOverlay').classList.remove('open');
-document.body.style.overflow='';st.gEdit=null;st.sEdit=null}});
-
-// ===================== INIT =====================
-
-renderGFilters();filterG();
-renderSFilters();filterS();
-</script>
-</body>
-</html>
